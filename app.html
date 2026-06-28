@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Tree Inventory</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%230078ff' d='M32 4c-8 0-14 6-14 14 0 6 4 10 8 13l6 4 6-4c4-3 8-7 8-13 0-8-6-14-14-14zM32 42l-10 7 3 11h14l3-11z'/%3E%3C/svg%3E" />
+<style>
+  :root { color-scheme: light; }
+  body, html { margin:0; padding:0; height:100%; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#f7f9fc; color:#1f2937; }
+  header { position:sticky; top:0; z-index:1000; background:#fff; border-bottom:1px solid #e5e7eb; padding:12px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+  #search { flex:1; min-width:220px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:1rem; }
+  #locate { padding:10px 14px; border:none; background:#0078ff; color:#fff; border-radius:8px; cursor:pointer; }
+  #locate:hover { opacity:.9; }
+  .filter-control { position:relative; z-index:1100; }
+  #categoryToggle { padding:10px 14px; border:1px solid #cbd5e1; background:#fff; color:#0f172a; border-radius:8px; cursor:pointer; }
+  #categoryMenu { position:absolute; top:calc(100% + 6px); left:0; min-width:240px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 8px 24px rgba(15, 23, 42, 0.12); padding:10px 12px; z-index:1200; }
+  .filter-group { margin-top:8px; }
+  .filter-group-title { font-size:0.8rem; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:#64748b; margin-bottom:4px; }
+  .filter-option { display:flex; align-items:center; gap:8px; font-size:0.95rem; padding:3px 0; }
+  .filter-option input { margin:0; }
+  #status { color:#475569; font-size:0.95rem; }
+  main { padding:16px; }
+  #map { position:relative; height:calc(100vh - 92px); border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:visible; }
+  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; }
+  #legend strong { display:block; margin-bottom:6px; }
+  .legend-row { display:flex; align-items:center; gap:8px; margin:3px 0; }
+  .legend-swatch { width:12px; height:12px; border-radius:50%; display:inline-block; border:1px solid rgba(15, 23, 42, 0.2); }
+  .leaflet-container { font: inherit; }
+  .leaflet-popup-content { font-size:0.95rem; }
+  .muted { color:#64748b; }
+</style>
+</head>
+<body>
+<header>
+  <input id="search" type="search" placeholder="Search tree records by any field" />
+  <div class="filter-control">
+    <button id="categoryToggle" type="button">Tree categories ▾</button>
+    <div id="categoryMenu" hidden>
+      <label class="filter-option"><input type="checkbox" checked data-category="all">All categories</label>
+      <div class="filter-group">
+        <div class="filter-group-title">Common shade</div>
+        <label class="filter-option"><input type="checkbox" checked data-category="maple">Maple</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="linden">Linden</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="oak">Oak</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="elm">Elm</label>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-title">Ornamental</div>
+        <label class="filter-option"><input type="checkbox" checked data-category="cherry">Cherry / Pear</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="honeylocust">Honeylocust / Ash</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="crabapple">Crabapple / Serviceberry</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="hornbeam">Hornbeam / Birch</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="plane">Plane</label>
+        <label class="filter-option"><input type="checkbox" checked data-category="ginkgo">Ginkgo</label>
+      </div>
+      <div class="filter-group">
+        <div class="filter-group-title">Other</div>
+        <label class="filter-option"><input type="checkbox" checked data-category="other">Other</label>
+      </div>
+    </div>
+  </div>
+  <button id="locate">Use my location</button>
+  <div id="status">Loading tree inventory…</div>
+</header>
+<main>
+  <div id="map">
+    <div id="legend" aria-label="Tree type legend">
+      <strong>Tree type</strong>
+      <div class="legend-row"><span class="legend-swatch" style="background:#22c55e"></span>Maple</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#4f46e5"></span>Linden</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#f59e0b"></span>Oak</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#ef4444"></span>Elm</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#0f766e"></span>Cherry / Pear</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#7c3aed"></span>Honeylocust / Ash</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#0ea5e9"></span>Crabapple / Serviceberry</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#f43f5e"></span>Hornbeam / Birch</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#a16207"></span>Plane</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#16a34a"></span>Ginkgo</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#64748b"></span>Other</div>
+      <div class="legend-row"><span class="legend-swatch" style="background:#ffffff; border-color:#cbd5e1"></span>Dot size = tree size</div>
+    </div>
+  </div>
+</main>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const status = document.getElementById('status');
+const searchInput = document.getElementById('search');
+const locateButton = document.getElementById('locate');
+const mapEl = document.getElementById('map');
+let rows = [];
+let headers = [];
+let latKey = null;
+let lonKey = null;
+let map = null;
+let markersLayer = null;
+let activeRows = [];
+let viewportRefreshTimer = null;
+let userLocationMarker = null;
+let userLocationCircle = null;
+let selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','honeylocust','crabapple','hornbeam','plane','ginkgo','other']);
+const MAX_MARKERS = 1000;
+const MARKER_BATCH_SIZE = 200;
+
+function initMap() {
+  if (!window.L || typeof window.L.map !== 'function') {
+    mapEl.innerHTML = '<div class="muted" style="padding:24px">The map library could not be loaded.</div>';
+    return;
+  }
+  map = L.map('map', { zoomControl:true, preferCanvas:true });
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 20
+  }).addTo(map);
+  markersLayer = L.layerGroup().addTo(map);
+  map.setView([39.98, -75.16], 12);
+  map.on('move zoom resize', () => {
+    if (viewportRefreshTimer) window.clearTimeout(viewportRefreshTimer);
+    viewportRefreshTimer = window.setTimeout(() => {
+      renderMarkers(activeRows);
+      if (map && map.getZoom() <= 12) {
+        if (userLocationMarker) {
+          markersLayer.removeLayer(userLocationMarker);
+          userLocationMarker = null;
+        }
+        if (userLocationCircle) {
+          markersLayer.removeLayer(userLocationCircle);
+          userLocationCircle = null;
+        }
+      }
+    }, 80);
+  });
+}
+
+function findCoords(head) {
+  const lower = head.map(h => h.toLowerCase());
+  const latIndex = lower.indexOf('loc_y');
+  const lonIndex = lower.indexOf('loc_x');
+  if (latIndex >= 0) latKey = head[latIndex];
+  if (lonIndex >= 0) lonKey = head[lonIndex];
+  if (!latKey || !lonKey) {
+    const latCandidates = ['latitude','lat','latitude_wgs84','y','ycoord','y_coordinate','latitud'];
+    const lonCandidates = ['longitude','lon','lng','longitude_wgs84','x','xcoord','x_coordinate','longitud'];
+    for (const candidate of latCandidates) {
+      const idx = lower.indexOf(candidate);
+      if (idx >= 0) { latKey = head[idx]; break; }
+    }
+    for (const candidate of lonCandidates) {
+      const idx = lower.indexOf(candidate);
+      if (idx >= 0) { lonKey = head[idx]; break; }
+    }
+  }
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function getCategoryKey(row) {
+  const name = String(row.tree_name || row.Tree_Name || row['tree_name'] || '').toLowerCase();
+  if (name.includes('maple')) return 'maple';
+  if (name.includes('linden')) return 'linden';
+  if (name.includes('oak')) return 'oak';
+  if (name.includes('elm')) return 'elm';
+  if (name.includes('cherry') || name.includes('pear')) return 'cherry';
+  if (name.includes('honeylocust') || name.includes('ash')) return 'honeylocust';
+  if (name.includes('crabapple') || name.includes('serviceberry')) return 'crabapple';
+  if (name.includes('hornbeam') || name.includes('birch')) return 'hornbeam';
+  if (name.includes('plane')) return 'plane';
+  if (name.includes('ginkgo')) return 'ginkgo';
+  return 'other';
+}
+
+function getMarkerColor(row) {
+  const name = String(row.tree_name || row.Tree_Name || row['tree_name'] || '').toLowerCase();
+  if (name.includes('maple')) return { color: '#22c55e', fillColor: '#22c55e' };
+  if (name.includes('linden')) return { color: '#4f46e5', fillColor: '#4f46e5' };
+  if (name.includes('oak')) return { color: '#f59e0b', fillColor: '#f59e0b' };
+  if (name.includes('elm')) return { color: '#ef4444', fillColor: '#ef4444' };
+  if (name.includes('cherry') || name.includes('pear')) return { color: '#0f766e', fillColor: '#0f766e' };
+  if (name.includes('honeylocust') || name.includes('ash')) return { color: '#7c3aed', fillColor: '#7c3aed' };
+  if (name.includes('crabapple') || name.includes('serviceberry')) return { color: '#0ea5e9', fillColor: '#0ea5e9' };
+  if (name.includes('hornbeam') || name.includes('birch')) return { color: '#f43f5e', fillColor: '#f43f5e' };
+  if (name.includes('plane')) return { color: '#a16207', fillColor: '#a16207' };
+  if (name.includes('ginkgo')) return { color: '#16a34a', fillColor: '#16a34a' };
+  return { color: '#64748b', fillColor: '#64748b' };
+}
+
+function getMarkerRadius(row) {
+  const dbhValue = parseFloat(row.tree_dbh || row.dbh || row.Tree_DBH || row['tree_dbh'] || '');
+  if (!Number.isFinite(dbhValue)) return 4;
+  if (dbhValue < 10) return 3;
+  if (dbhValue < 20) return 5;
+  if (dbhValue < 30) return 7;
+  return 9;
+}
+
+function selectRowsToRender(rows, limit) {
+  if (rows.length <= limit) return rows;
+  const ranked = rows
+    .map((row, index) => ({
+      row,
+      index,
+      size: parseFloat(row.tree_dbh || row.dbh || row.Tree_DBH || row['tree_dbh']) || 0
+    }))
+    .sort((a, b) => (b.size - a.size) || (a.index - b.index));
+
+  const selectedRows = [];
+  const stride = Math.max(1, Math.floor(ranked.length / limit));
+  for (let i = 0; i < ranked.length && selectedRows.length < limit; i += stride) {
+    selectedRows.push(ranked[i].row);
+  }
+  if (selectedRows.length < limit) {
+    for (const entry of ranked) {
+      if (selectedRows.length >= limit) break;
+      if (!selectedRows.includes(entry.row)) {
+        selectedRows.push(entry.row);
+      }
+    }
+  }
+  return selectedRows;
+}
+
+function makePopup(row) {
+  const popupHeaders = headers.filter(header => !['X', 'Y'].includes(header));
+  const items = popupHeaders.map(header => `<strong>${escapeHtml(header)}</strong>: ${escapeHtml(row[header] || '')}`);
+  return `<div style="max-width:240px">${items.join('<br>')}</div>`;
+}
+
+function applyCategoryFilter(rows) {
+  if (!rows || !rows.length) return [];
+  if (selectedCategoryKeys.size === 0) return [];
+  return rows.filter(row => selectedCategoryKeys.has(getCategoryKey(row)));
+}
+
+function renderMarkers(dataRows) {
+  if (!markersLayer) return;
+  const hadLocationCircle = userLocationCircle;
+  const hadLocationMarker = userLocationMarker;
+  markersLayer.clearLayers();
+  if (hadLocationCircle && map && map.getZoom() > 12) {
+    userLocationCircle = hadLocationCircle.addTo(markersLayer);
+  } else {
+    userLocationCircle = null;
+  }
+  if (hadLocationMarker && map && map.getZoom() > 12) {
+    userLocationMarker = hadLocationMarker.addTo(markersLayer);
+  } else {
+    userLocationMarker = null;
+  }
+  const categoryFilteredRows = applyCategoryFilter(dataRows || []);
+  const validRows = categoryFilteredRows.filter(row => {
+    const lat = parseFloat(row[latKey]);
+    const lon = parseFloat(row[lonKey]);
+    return Number.isFinite(lat) && Number.isFinite(lon) && lat >= -90 && lat <= 90 && lon >= -180 && lon <= 180;
+  });
+  activeRows = validRows;
+  if (!validRows.length) {
+    status.textContent = 'No valid coordinates found in the loaded CSV.';
+    return;
+  }
+
+  const bounds = map ? map.getBounds() : null;
+  const visibleRows = bounds
+    ? validRows.filter(row => {
+        const lat = parseFloat(row[latKey]);
+        const lon = parseFloat(row[lonKey]);
+        return bounds.contains([lat, lon]);
+      })
+    : validRows;
+
+  const rowsToRender = selectRowsToRender(visibleRows, MAX_MARKERS);
+  let index = 0;
+
+  const renderBatch = () => {
+    const end = Math.min(index + MARKER_BATCH_SIZE, rowsToRender.length);
+    for (; index < end; index += 1) {
+      const row = rowsToRender[index];
+      const markerStyle = getMarkerColor(row);
+      const markerRadius = getMarkerRadius(row);
+      const marker = L.circleMarker([parseFloat(row[latKey]), parseFloat(row[lonKey])], {
+        radius: markerRadius,
+        color: markerStyle.color,
+        fillColor: markerStyle.fillColor,
+        fillOpacity: 0.85
+      });
+      marker.bindPopup(makePopup(row));
+      marker.addTo(markersLayer);
+    }
+
+    if (index < rowsToRender.length) {
+      status.textContent = `Rendering ${index} of ${rowsToRender.length} visible records…`;
+      window.requestAnimationFrame(renderBatch);
+      return;
+    }
+
+    if (visibleRows.length > MAX_MARKERS) {
+      status.textContent = `Showing ${rowsToRender.length} scattered large visible trees out of ${visibleRows.length} matching records.`;
+    } else {
+      status.textContent = `Showing ${rowsToRender.length} visible tree records.`;
+    }
+  };
+
+  window.requestAnimationFrame(renderBatch);
+}
+
+function refreshVisibleRows() {
+  const query = searchInput.value.trim().toLowerCase();
+  let filtered = rows;
+  if (query) {
+    filtered = rows.filter(row => headers.some(h => (row[h] || '').toString().toLowerCase().includes(query)));
+  }
+  renderMarkers(filtered);
+  if (query) {
+    status.textContent = `Showing ${filtered.length} of ${rows.length} records matching "${query}".`;
+  }
+}
+
+function filterRows() {
+  refreshVisibleRows();
+}
+
+function bindCategoryFilters() {
+  const toggleButton = document.getElementById('categoryToggle');
+  const menu = document.getElementById('categoryMenu');
+  const allCheckbox = menu.querySelector('input[data-category="all"]');
+  const categoryCheckboxes = Array.from(menu.querySelectorAll('input[type="checkbox"]')).filter(input => input !== allCheckbox);
+
+  toggleButton.addEventListener('click', () => {
+    const isHidden = menu.hidden;
+    menu.hidden = !isHidden;
+  });
+
+  document.addEventListener('click', event => {
+    if (!menu.contains(event.target) && event.target !== toggleButton) {
+      menu.hidden = true;
+    }
+  });
+
+  function syncAllCheckbox() {
+    const allSelected = categoryCheckboxes.length > 0 && categoryCheckboxes.every(input => input.checked);
+    allCheckbox.checked = allSelected;
+  }
+
+  function updateSelectedCategories() {
+    if (allCheckbox.checked) {
+      selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','honeylocust','crabapple','hornbeam','plane','ginkgo','other']);
+    } else {
+      selectedCategoryKeys = new Set(categoryCheckboxes.filter(input => input.checked).map(input => input.dataset.category));
+    }
+    refreshVisibleRows();
+  }
+
+  allCheckbox.addEventListener('change', () => {
+    categoryCheckboxes.forEach(input => {
+      input.checked = allCheckbox.checked;
+    });
+    updateSelectedCategories();
+  });
+
+  categoryCheckboxes.forEach(input => {
+    input.addEventListener('change', () => {
+      syncAllCheckbox();
+      updateSelectedCategories();
+    });
+  });
+}
+
+function tryGeolocate() {
+  if (!map || !navigator.geolocation) {
+    status.textContent = 'Geolocation is not supported by this browser.';
+    return;
+  }
+  status.textContent = 'Detecting your location…';
+  navigator.geolocation.getCurrentPosition(position => {
+    const coords = [position.coords.latitude, position.coords.longitude];
+    map.setView(coords, 17);
+    if (userLocationMarker) {
+      markersLayer.removeLayer(userLocationMarker);
+    }
+    if (userLocationCircle) {
+      markersLayer.removeLayer(userLocationCircle);
+    }
+    userLocationCircle = L.circle(coords, {
+      radius: Math.max(position.coords.accuracy || 50, 50),
+      color: '#0078ff',
+      fillColor: '#0078ff',
+      fillOpacity: 0.18
+    }).addTo(markersLayer);
+    userLocationMarker = L.marker(coords, {
+      icon: L.divIcon({
+        html: '<div style="background:#0078ff;border:2px solid white;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 3px rgba(0,120,255,0.2);"></div>',
+        className: 'location-pin',
+        iconSize: [14, 14],
+        iconAnchor: [7, 7]
+      })
+    }).addTo(markersLayer);
+    status.textContent = `Centered on your location.`;
+  }, () => {
+    status.textContent = 'Unable to retrieve location.';
+  }, { timeout: 15000 });
+}
+
+function parseCsv(text) {
+  const parsedRows = [];
+  let row = [];
+  let field = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i += 1) {
+    const char = text[i];
+    const next = text[i + 1];
+    if (inQuotes) {
+      if (char === '"') {
+        if (next === '"') {
+          field += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        field += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ',') {
+      row.push(field);
+      field = '';
+    } else if (char === '\n') {
+      row.push(field);
+      parsedRows.push(row);
+      row = [];
+      field = '';
+    } else if (char !== '\r') {
+      field += char;
+    }
+  }
+  if (field.length > 0 || row.length > 0) {
+    row.push(field);
+    parsedRows.push(row);
+  }
+  const [headerRow, ...dataRows] = parsedRows.filter(r => r.some(cell => cell !== ''));
+  if (!headerRow) {
+    return { data: [], meta: { fields: [] }, errors: [] };
+  }
+  const parsedHeaders = headerRow.map(value => value.trim());
+  const data = dataRows.map(values => {
+    const entry = {};
+    parsedHeaders.forEach((header, index) => {
+      entry[header] = (values[index] || '').trim();
+    });
+    return entry;
+  });
+  return { data, meta: { fields: parsedHeaders }, errors: [] };
+}
+
+function loadInventoryCsv() {
+  const url = new URL('./ppr_tree_inventory_2025.csv', window.location.href).href;
+  return fetch(url, { cache: 'no-store', headers: { 'Cache-Control': 'no-cache' } }).catch(() => fetch(url, { cache: 'no-store' }));
+}
+
+function init() {
+  initMap();
+  status.textContent = 'Loading tree inventory…';
+  loadInventoryCsv()
+    .then(response => {
+      if (!response.ok) throw new Error('CSV file not found or inaccessible.');
+      return response.text();
+    })
+    .then(text => {
+      const result = parseCsv(text);
+      if (!result.data || !result.data.length) throw new Error('No data found in CSV.');
+      headers = result.meta.fields || Object.keys(result.data[0]);
+      findCoords(headers);
+      rows = result.data;
+      renderMarkers(rows);
+      status.textContent = `Loaded ${rows.length} tree records.`;
+    })
+    .catch(err => {
+      if (window.location.protocol === 'file:') {
+        status.textContent = 'Open this page from a local web server such as http://127.0.0.1:8000/app.html so the CSV can be fetched.';
+      } else {
+        status.textContent = err.message;
+      }
+      mapEl.innerHTML = '<div class="muted" style="padding:24px">The inventory could not be loaded.</div>';
+    });
+  searchInput.addEventListener('input', filterRows);
+  locateButton.addEventListener('click', tryGeolocate);
+  bindCategoryFilters();
+}
+
+init();
+</script>
+</body>
+</html>
