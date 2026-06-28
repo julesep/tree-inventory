@@ -15,8 +15,12 @@
   #status { color:#475569; font-size:0.95rem; }
   main { padding:16px; }
   #map { position:relative; height:calc(100vh - 92px); border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:visible; }
-  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:240px; max-height:65vh; overflow-y:auto; }
-  #legend strong { display:block; margin-bottom:8px; font-size:0.95rem; }
+  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:240px; max-height:65vh; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  #legend strong { display:block; font-size:0.95rem; }
+  .legend-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
+  .legend-mode-toggle { display:inline-flex; align-items:center; gap:4px; padding:2px; border:1px solid #e2e8f0; border-radius:999px; background:#f8fafc; }
+  .legend-mode-button { border:none; background:transparent; color:#64748b; border-radius:999px; padding:3px 8px; font-size:0.78rem; cursor:pointer; }
+  .legend-mode-button.active { background:#0078ff; color:#fff; }
   #legendContent { display:flex; flex-direction:column; gap:4px; }
   .legend-group { border-bottom:1px solid #e5e7eb; padding-bottom:4px; }
   .legend-group:last-child { border-bottom:none; padding-bottom:0; }
@@ -48,7 +52,13 @@
 <main>
   <div id="map">
     <div id="legend" aria-label="Tree type legend">
-      <strong>Tree types</strong>
+      <div class="legend-header">
+        <strong>Tree types</strong>
+        <div class="legend-mode-toggle" role="group" aria-label="Legend label mode">
+          <button type="button" class="legend-mode-button active" data-mode="common">Common</button>
+          <button type="button" class="legend-mode-button" data-mode="scientific">Scientific</button>
+        </div>
+      </div>
       <div id="legendContent">
         <div class="legend-group" data-group="shade">
           <div class="legend-group-header" data-group="shade">
@@ -56,10 +66,10 @@
             <span class="legend-group-title">Common shade</span>
           </div>
           <div class="legend-group-items">
-            <label class="legend-item"><input type="checkbox" checked data-category="maple"><span class="legend-swatch" data-category="maple" style="background:#22c55e"></span>Maple</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="linden"><span class="legend-swatch" data-category="linden" style="background:#4f46e5"></span>Linden</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="oak"><span class="legend-swatch" data-category="oak" style="background:#f59e0b"></span>Oak</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="elm"><span class="legend-swatch" data-category="elm" style="background:#ef4444"></span>Elm</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="maple"><span class="legend-swatch" data-category="maple" style="background:#2f9e44"></span>Maple</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="linden"><span class="legend-swatch" data-category="linden" style="background:#5aa64b"></span>Linden</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="oak"><span class="legend-swatch" data-category="oak" style="background:#7a9a2f"></span>Oak</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="elm"><span class="legend-swatch" data-category="elm" style="background:#3f7d20"></span>Elm</label>
           </div>
         </div>
         <div class="legend-group" data-group="ornamental">
@@ -68,12 +78,16 @@
             <span class="legend-group-title">Ornamental</span>
           </div>
           <div class="legend-group-items">
-            <label class="legend-item"><input type="checkbox" checked data-category="cherry"><span class="legend-swatch" data-category="cherry" style="background:#0f766e"></span>Cherry / Pear</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="honeylocust"><span class="legend-swatch" data-category="honeylocust" style="background:#7c3aed"></span>Honeylocust / Ash</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="crabapple"><span class="legend-swatch" data-category="crabapple" style="background:#0ea5e9"></span>Crabapple / Serviceberry</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="hornbeam"><span class="legend-swatch" data-category="hornbeam" style="background:#f43f5e"></span>Hornbeam / Birch</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="plane"><span class="legend-swatch" data-category="plane" style="background:#a16207"></span>Plane</label>
-            <label class="legend-item"><input type="checkbox" checked data-category="ginkgo"><span class="legend-swatch" data-category="ginkgo" style="background:#16a34a"></span>Ginkgo</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="cherry"><span class="legend-swatch" data-category="cherry" style="background:#0f766e"></span>Cherry</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="pear"><span class="legend-swatch" data-category="pear" style="background:#0d9488"></span>Pear</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="honeylocust"><span class="legend-swatch" data-category="honeylocust" style="background:#14b8a6"></span>Honeylocust</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="ash"><span class="legend-swatch" data-category="ash" style="background:#2dd4bf"></span>Ash</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="crabapple"><span class="legend-swatch" data-category="crabapple" style="background:#34d399"></span>Crabapple</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="serviceberry"><span class="legend-swatch" data-category="serviceberry" style="background:#5eead4"></span>Serviceberry</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="hornbeam"><span class="legend-swatch" data-category="hornbeam" style="background:#2c7a7b"></span>Hornbeam</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="birch"><span class="legend-swatch" data-category="birch" style="background:#319795"></span>Birch</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="plane"><span class="legend-swatch" data-category="plane" style="background:#4fd1c5"></span>Plane</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="ginkgo"><span class="legend-swatch" data-category="ginkgo" style="background:#6ee7b7"></span>Ginkgo</label>
           </div>
         </div>
         <div class="legend-group" data-group="conifer">
@@ -82,7 +96,12 @@
             <span class="legend-group-title">Conifers</span>
           </div>
           <div class="legend-group-items">
-            <label class="legend-item"><input type="checkbox" checked data-category="conifer"><span class="legend-swatch" data-category="conifer" style="background:#15803d"></span>Pine, Spruce, Hemlock, Cedar, Fir, etc.</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="pine"><span class="legend-swatch" data-category="pine" style="background:#15803d"></span>Pine</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="spruce"><span class="legend-swatch" data-category="spruce" style="background:#22c55e"></span>Spruce</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="hemlock"><span class="legend-swatch" data-category="hemlock" style="background:#166534"></span>Hemlock</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="cedar"><span class="legend-swatch" data-category="cedar" style="background:#4ade80"></span>Cedar</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="fir"><span class="legend-swatch" data-category="fir" style="background:#65a30d"></span>Fir</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="other_conifer"><span class="legend-swatch" data-category="other_conifer" style="background:#84cc16"></span>Other conifers</label>
           </div>
         </div>
         <div class="legend-group" data-group="dogwood">
@@ -91,7 +110,9 @@
             <span class="legend-group-title">Dogwoods & Redbuds</span>
           </div>
           <div class="legend-group-items">
-            <label class="legend-item"><input type="checkbox" checked data-category="dogwood"><span class="legend-swatch" data-category="dogwood" style="background:#ec4899"></span>Dogwood, Redbud, Cercis</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="dogwood"><span class="legend-swatch" data-category="dogwood" style="background:#ec4899"></span>Dogwood</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="redbud"><span class="legend-swatch" data-category="redbud" style="background:#f472b6"></span>Redbud</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="cercis"><span class="legend-swatch" data-category="cercis" style="background:#db2777"></span>Cercis</label>
           </div>
         </div>
         <div class="legend-group" data-group="hawthorn">
@@ -109,7 +130,12 @@
             <span class="legend-group-title">Specialty Trees</span>
           </div>
           <div class="legend-group-items">
-            <label class="legend-item"><input type="checkbox" checked data-category="specialty"><span class="legend-swatch" data-category="specialty" style="background:#8b5cf6"></span>Zelkova, Goldenrain, Katsura, Sweetgum, Tulip, Catalpa, etc.</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="zelkova"><span class="legend-swatch" data-category="zelkova" style="background:#8b5cf6"></span>Zelkova</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="goldenrain"><span class="legend-swatch" data-category="goldenrain" style="background:#c084fc"></span>Goldenrain</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="katsura"><span class="legend-swatch" data-category="katsura" style="background:#6d28d9"></span>Katsura</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="sweetgum"><span class="legend-swatch" data-category="sweetgum" style="background:#9333ea"></span>Sweetgum</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="tulip"><span class="legend-swatch" data-category="tulip" style="background:#a855f7"></span>Tulip</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="catalpa"><span class="legend-swatch" data-category="catalpa" style="background:#7e22ce"></span>Catalpa</label>
           </div>
         </div>
         <div class="legend-group" data-group="magnolia">
@@ -118,7 +144,9 @@
             <span class="legend-group-title">Magnolias & Holly</span>
           </div>
           <div class="legend-group-items">
-            <label class="legend-item"><input type="checkbox" checked data-category="magnolia"><span class="legend-swatch" data-category="magnolia" style="background:#db2777"></span>Magnolia, Holly, Ilex</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="magnolia"><span class="legend-swatch" data-category="magnolia" style="background:#db2777"></span>Magnolia</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="holly"><span class="legend-swatch" data-category="holly" style="background:#f472b6"></span>Holly</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="ilex"><span class="legend-swatch" data-category="ilex" style="background:#be185d"></span>Ilex</label>
           </div>
         </div>
         <div class="legend-group" data-group="nut_trees">
@@ -127,7 +155,10 @@
             <span class="legend-group-title">Nut & Seed Trees</span>
           </div>
           <div class="legend-group-items">
-            <label class="legend-item"><input type="checkbox" checked data-category="nut_trees"><span class="legend-swatch" data-category="nut_trees" style="background:#92400e"></span>Walnut, Hickory, Buckeye, Chestnut</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="walnut"><span class="legend-swatch" data-category="walnut" style="background:#92400e"></span>Walnut</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="hickory"><span class="legend-swatch" data-category="hickory" style="background:#b45309"></span>Hickory</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="buckeye"><span class="legend-swatch" data-category="buckeye" style="background:#d97706"></span>Buckeye</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="chestnut"><span class="legend-swatch" data-category="chestnut" style="background:#78350f"></span>Chestnut</label>
           </div>
         </div>
         <div class="legend-group" data-group="misc">
@@ -152,6 +183,8 @@ const status = document.getElementById('status');
 const searchInput = document.getElementById('search');
 const locateButton = document.getElementById('locate');
 const mapEl = document.getElementById('map');
+const legendEl = document.getElementById('legend');
+let legendMode = 'common';
 let rows = [];
 let headers = [];
 let latKey = null;
@@ -162,9 +195,41 @@ let activeRows = [];
 let viewportRefreshTimer = null;
 let userLocationMarker = null;
 let userLocationCircle = null;
-let selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','honeylocust','crabapple','hornbeam','plane','ginkgo','conifer','dogwood','hawthorn','magnolia','specialty','nut_trees','other','unmapped']);
+let selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','pear','honeylocust','ash','crabapple','serviceberry','hornbeam','birch','plane','ginkgo','pine','spruce','hemlock','cedar','fir','other_conifer','dogwood','redbud','cercis','hawthorn','magnolia','holly','ilex','zelkova','goldenrain','katsura','sweetgum','tulip','catalpa','walnut','hickory','buckeye','chestnut','other','unmapped']);
 const MAX_MARKERS = 1000;
 const MARKER_BATCH_SIZE = 200;
+
+function attachLegendScrollProtection() {
+  if (!legendEl) return;
+
+  const blockMapInteraction = (event) => {
+    event.stopPropagation();
+  };
+
+  legendEl.addEventListener('wheel', blockMapInteraction, { passive: true });
+  legendEl.addEventListener('touchmove', blockMapInteraction, { passive: true });
+}
+
+function updateLegendLabels() {
+  const labels = Array.from(document.querySelectorAll('.legend-item .legend-label-text'));
+  labels.forEach(label => {
+    const parent = label.closest('.legend-item');
+    if (!parent) return;
+    const nextText = legendMode === 'scientific' ? parent.dataset.scientific : parent.dataset.common;
+    if (nextText) label.textContent = nextText;
+  });
+}
+
+function bindLegendModeToggle() {
+  const buttons = Array.from(document.querySelectorAll('.legend-mode-button'));
+  buttons.forEach(button => {
+    button.addEventListener('click', () => {
+      legendMode = button.dataset.mode;
+      buttons.forEach(btn => btn.classList.toggle('active', btn === button));
+      updateLegendLabels();
+    });
+  });
+}
 
 function initMap() {
   if (!window.L || typeof window.L.map !== 'function') {
@@ -232,40 +297,82 @@ function getCategoryKey(row) {
   if (name.includes('linden')) return 'linden';
   if (name.includes('oak')) return 'oak';
   if (name.includes('elm')) return 'elm';
-  if (name.includes('cherry') || name.includes('pear')) return 'cherry';
-  if (name.includes('honeylocust') || name.includes('ash')) return 'honeylocust';
-  if (name.includes('crabapple') || name.includes('serviceberry')) return 'crabapple';
-  if (name.includes('hornbeam') || name.includes('birch')) return 'hornbeam';
+  if (name.includes('cherry')) return 'cherry';
+  if (name.includes('pear')) return 'pear';
+  if (name.includes('honeylocust')) return 'honeylocust';
+  if (name.includes('ash')) return 'ash';
+  if (name.includes('crabapple')) return 'crabapple';
+  if (name.includes('serviceberry')) return 'serviceberry';
+  if (name.includes('hornbeam')) return 'hornbeam';
+  if (name.includes('birch')) return 'birch';
   if (name.includes('plane')) return 'plane';
   if (name.includes('ginkgo')) return 'ginkgo';
-  if (name.includes('pine') || name.includes('spruce') || name.includes('hemlock') || name.includes('cedar') || name.includes('cypress') || name.includes('fir') || name.includes('larch') || name.includes('arborvitae') || name.includes('baldcypress') || name.includes('redwood') || name.includes('tsuga') || name.includes('picea')) return 'conifer';
-  if (name.includes('dogwood') || name.includes('redbud') || name.includes('cercis')) return 'dogwood';
+  if (name.includes('pine')) return 'pine';
+  if (name.includes('spruce')) return 'spruce';
+  if (name.includes('hemlock')) return 'hemlock';
+  if (name.includes('cedar')) return 'cedar';
+  if (name.includes('fir')) return 'fir';
+  if (name.includes('cypress') || name.includes('larch') || name.includes('arborvitae') || name.includes('baldcypress') || name.includes('redwood') || name.includes('tsuga') || name.includes('picea')) return 'other_conifer';
+  if (name.includes('dogwood')) return 'dogwood';
+  if (name.includes('redbud')) return 'redbud';
+  if (name.includes('cercis')) return 'cercis';
   if (name.includes('hawthorn') || name.includes('crataegus')) return 'hawthorn';
-  if (name.includes('magnolia') || name.includes('holly') || name.includes('ilex')) return 'magnolia';
-  if (name.includes('zelkova') || name.includes('goldenrain') || name.includes('katsura') || name.includes('sweetgum') || name.includes('tulip tree') || name.includes('liriodendron') || name.includes('catalpa') || name.includes('paulownia') || name.includes('metasequoia') || name.includes('koelreuteria') || name.includes('cercidiphyllum')) return 'specialty';
-  if (name.includes('walnut') || name.includes('hickory') || name.includes('carya') || name.includes('buckeye') || name.includes('aesculus') || name.includes('chestnut')) return 'nut_trees';
+  if (name.includes('magnolia')) return 'magnolia';
+  if (name.includes('holly')) return 'holly';
+  if (name.includes('ilex')) return 'ilex';
+  if (name.includes('zelkova')) return 'zelkova';
+  if (name.includes('goldenrain')) return 'goldenrain';
+  if (name.includes('katsura')) return 'katsura';
+  if (name.includes('sweetgum')) return 'sweetgum';
+  if (name.includes('tulip tree') || name.includes('liriodendron') || name.includes('tulip')) return 'tulip';
+  if (name.includes('catalpa')) return 'catalpa';
+  if (name.includes('walnut')) return 'walnut';
+  if (name.includes('hickory') || name.includes('carya')) return 'hickory';
+  if (name.includes('buckeye') || name.includes('aesculus')) return 'buckeye';
+  if (name.includes('chestnut')) return 'chestnut';
   if (name.includes('unknown') || name.includes('shrub')) return 'unmapped';
   return 'other';
 }
 
 function getMarkerColor(row) {
   const name = String(row.tree_name || row.Tree_Name || row['tree_name'] || '').toLowerCase();
-  if (name.includes('maple')) return { color: '#22c55e', fillColor: '#22c55e' };
-  if (name.includes('linden')) return { color: '#4f46e5', fillColor: '#4f46e5' };
-  if (name.includes('oak')) return { color: '#f59e0b', fillColor: '#f59e0b' };
-  if (name.includes('elm')) return { color: '#ef4444', fillColor: '#ef4444' };
-  if (name.includes('cherry') || name.includes('pear')) return { color: '#0f766e', fillColor: '#0f766e' };
-  if (name.includes('honeylocust') || name.includes('ash')) return { color: '#7c3aed', fillColor: '#7c3aed' };
-  if (name.includes('crabapple') || name.includes('serviceberry')) return { color: '#0ea5e9', fillColor: '#0ea5e9' };
-  if (name.includes('hornbeam') || name.includes('birch')) return { color: '#f43f5e', fillColor: '#f43f5e' };
-  if (name.includes('plane')) return { color: '#a16207', fillColor: '#a16207' };
-  if (name.includes('ginkgo')) return { color: '#16a34a', fillColor: '#16a34a' };
-  if (name.includes('pine') || name.includes('spruce') || name.includes('hemlock') || name.includes('cedar') || name.includes('cypress') || name.includes('fir') || name.includes('larch') || name.includes('arborvitae') || name.includes('baldcypress') || name.includes('redwood') || name.includes('tsuga') || name.includes('picea')) return { color: '#15803d', fillColor: '#15803d' };
-  if (name.includes('dogwood') || name.includes('redbud') || name.includes('cercis')) return { color: '#ec4899', fillColor: '#ec4899' };
+  if (name.includes('maple')) return { color: '#2f9e44', fillColor: '#2f9e44' };
+  if (name.includes('linden')) return { color: '#5aa64b', fillColor: '#5aa64b' };
+  if (name.includes('oak')) return { color: '#7a9a2f', fillColor: '#7a9a2f' };
+  if (name.includes('elm')) return { color: '#3f7d20', fillColor: '#3f7d20' };
+  if (name.includes('cherry')) return { color: '#0f766e', fillColor: '#0f766e' };
+  if (name.includes('pear')) return { color: '#0d9488', fillColor: '#0d9488' };
+  if (name.includes('honeylocust')) return { color: '#2563eb', fillColor: '#2563eb' };
+  if (name.includes('ash')) return { color: '#3b82f6', fillColor: '#3b82f6' };
+  if (name.includes('crabapple')) return { color: '#06b6d4', fillColor: '#06b6d4' };
+  if (name.includes('serviceberry')) return { color: '#22d3ee', fillColor: '#22d3ee' };
+  if (name.includes('hornbeam')) return { color: '#7c3aed', fillColor: '#7c3aed' };
+  if (name.includes('birch')) return { color: '#8b5cf6', fillColor: '#8b5cf6' };
+  if (name.includes('plane')) return { color: '#a78bfa', fillColor: '#a78bfa' };
+  if (name.includes('ginkgo')) return { color: '#14b8a6', fillColor: '#14b8a6' };
+  if (name.includes('pine')) return { color: '#15803d', fillColor: '#15803d' };
+  if (name.includes('spruce')) return { color: '#22c55e', fillColor: '#22c55e' };
+  if (name.includes('hemlock')) return { color: '#166534', fillColor: '#166534' };
+  if (name.includes('cedar')) return { color: '#4ade80', fillColor: '#4ade80' };
+  if (name.includes('fir')) return { color: '#65a30d', fillColor: '#65a30d' };
+  if (name.includes('cypress') || name.includes('larch') || name.includes('arborvitae') || name.includes('baldcypress') || name.includes('redwood') || name.includes('tsuga') || name.includes('picea')) return { color: '#84cc16', fillColor: '#84cc16' };
+  if (name.includes('dogwood')) return { color: '#ec4899', fillColor: '#ec4899' };
+  if (name.includes('redbud')) return { color: '#f472b6', fillColor: '#f472b6' };
+  if (name.includes('cercis')) return { color: '#db2777', fillColor: '#db2777' };
   if (name.includes('hawthorn') || name.includes('crataegus')) return { color: '#d97706', fillColor: '#d97706' };
-  if (name.includes('magnolia') || name.includes('holly') || name.includes('ilex')) return { color: '#db2777', fillColor: '#db2777' };
-  if (name.includes('zelkova') || name.includes('goldenrain') || name.includes('katsura') || name.includes('sweetgum') || name.includes('tulip tree') || name.includes('liriodendron') || name.includes('catalpa') || name.includes('paulownia') || name.includes('metasequoia') || name.includes('koelreuteria') || name.includes('cercidiphyllum')) return { color: '#8b5cf6', fillColor: '#8b5cf6' };
-  if (name.includes('walnut') || name.includes('hickory') || name.includes('carya') || name.includes('buckeye') || name.includes('aesculus') || name.includes('chestnut')) return { color: '#92400e', fillColor: '#92400e' };
+  if (name.includes('magnolia')) return { color: '#db2777', fillColor: '#db2777' };
+  if (name.includes('holly')) return { color: '#f472b6', fillColor: '#f472b6' };
+  if (name.includes('ilex')) return { color: '#be185d', fillColor: '#be185d' };
+  if (name.includes('zelkova')) return { color: '#8b5cf6', fillColor: '#8b5cf6' };
+  if (name.includes('goldenrain')) return { color: '#c084fc', fillColor: '#c084fc' };
+  if (name.includes('katsura')) return { color: '#6d28d9', fillColor: '#6d28d9' };
+  if (name.includes('sweetgum')) return { color: '#9333ea', fillColor: '#9333ea' };
+  if (name.includes('tulip') || name.includes('liriodendron')) return { color: '#a855f7', fillColor: '#a855f7' };
+  if (name.includes('catalpa')) return { color: '#7e22ce', fillColor: '#7e22ce' };
+  if (name.includes('walnut')) return { color: '#92400e', fillColor: '#92400e' };
+  if (name.includes('hickory') || name.includes('carya')) return { color: '#b45309', fillColor: '#b45309' };
+  if (name.includes('buckeye') || name.includes('aesculus')) return { color: '#d97706', fillColor: '#d97706' };
+  if (name.includes('chestnut')) return { color: '#78350f', fillColor: '#78350f' };
   if (name.includes('unknown') || name.includes('shrub')) return { color: '#9ca3af', fillColor: '#9ca3af' };
   return { color: '#64748b', fillColor: '#64748b' };
 }
@@ -432,6 +539,8 @@ function bindLegendFilters() {
 function bindCategoryFilters() {
   bindLegendFilters();
 }
+
+attachLegendScrollProtection();
 
 function tryGeolocate() {
   if (!map || !navigator.geolocation) {
