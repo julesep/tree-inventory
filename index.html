@@ -12,20 +12,28 @@
   #search { flex:1; min-width:220px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:1rem; }
   #locate { padding:10px 14px; border:none; background:#0078ff; color:#fff; border-radius:8px; cursor:pointer; }
   #locate:hover { opacity:.9; }
-  .filter-control { position:relative; z-index:1100; }
-  #categoryToggle { padding:10px 14px; border:1px solid #cbd5e1; background:#fff; color:#0f172a; border-radius:8px; cursor:pointer; }
-  #categoryMenu { position:absolute; top:calc(100% + 6px); left:0; min-width:240px; background:#fff; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 8px 24px rgba(15, 23, 42, 0.12); padding:10px 12px; z-index:1200; }
-  .filter-group { margin-top:8px; }
-  .filter-group-title { font-size:0.8rem; font-weight:700; letter-spacing:0.03em; text-transform:uppercase; color:#64748b; margin-bottom:4px; }
-  .filter-option { display:flex; align-items:center; gap:8px; font-size:0.95rem; padding:3px 0; }
-  .filter-option input { margin:0; }
   #status { color:#475569; font-size:0.95rem; }
   main { padding:16px; }
   #map { position:relative; height:calc(100vh - 92px); border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:visible; }
-  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; }
-  #legend strong { display:block; margin-bottom:6px; }
-  .legend-row { display:flex; align-items:center; gap:8px; margin:3px 0; }
-  .legend-swatch { width:12px; height:12px; border-radius:50%; display:inline-block; border:1px solid rgba(15, 23, 42, 0.2); }
+  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:220px; max-height:60vh; overflow-y:auto; }
+  #legend strong { display:block; margin-bottom:8px; font-size:0.95rem; }
+  #legendContent { display:flex; flex-direction:column; gap:6px; }
+  .legend-group { border-bottom:1px solid #e5e7eb; padding-bottom:6px; }
+  .legend-group:last-child { border-bottom:none; padding-bottom:0; }
+  .legend-group-header { display:flex; align-items:center; gap:6px; cursor:pointer; padding:4px 0; user-select:none; }
+  .legend-group-toggle { display:inline-block; width:16px; text-align:center; font-size:0.8rem; color:#64748b; transition:transform 0.2s; }
+  .legend-group-header:hover { color:#0f172a; }
+  .legend-group.collapsed .legend-group-toggle { transform:rotate(-90deg); }
+  .legend-group-title { font-weight:600; font-size:0.8rem; color:#64748b; text-transform:uppercase; letter-spacing:0.03em; }
+  .legend-group-items { display:flex; flex-direction:column; gap:3px; padding-left:22px; margin-top:4px; }
+  .legend-group.collapsed .legend-group-items { display:none; }
+  .legend-item { display:flex; align-items:center; gap:6px; cursor:pointer; padding:2px 0; user-select:none; color:#1f2937; transition:color 0.15s; }
+  .legend-item:hover { color:#0f172a; }
+  .legend-item input { margin:0; cursor:pointer; }
+  .legend-item input:checked + .legend-swatch { opacity:1; filter:none; }
+  .legend-item input:not(:checked) + .legend-swatch { opacity:0.5; filter:saturate(0.4); }
+  .legend-swatch { width:12px; height:12px; border-radius:50%; display:inline-block; border:1px solid rgba(15, 23, 42, 0.2); transition:opacity 0.15s, filter 0.15s; }
+  .legend-note { margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb; display:flex; align-items:center; gap:6px; font-size:0.85rem; color:#64748b; }
   .leaflet-container { font: inherit; }
   .leaflet-popup-content { font-size:0.95rem; }
   .muted { color:#64748b; }
@@ -34,51 +42,51 @@
 <body>
 <header>
   <input id="search" type="search" placeholder="Search tree records by any field" />
-  <div class="filter-control">
-    <button id="categoryToggle" type="button">Tree categories ▾</button>
-    <div id="categoryMenu" hidden>
-      <label class="filter-option"><input type="checkbox" checked data-category="all">All categories</label>
-      <div class="filter-group">
-        <div class="filter-group-title">Common shade</div>
-        <label class="filter-option"><input type="checkbox" checked data-category="maple">Maple</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="linden">Linden</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="oak">Oak</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="elm">Elm</label>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-title">Ornamental</div>
-        <label class="filter-option"><input type="checkbox" checked data-category="cherry">Cherry / Pear</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="honeylocust">Honeylocust / Ash</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="crabapple">Crabapple / Serviceberry</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="hornbeam">Hornbeam / Birch</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="plane">Plane</label>
-        <label class="filter-option"><input type="checkbox" checked data-category="ginkgo">Ginkgo</label>
-      </div>
-      <div class="filter-group">
-        <div class="filter-group-title">Other</div>
-        <label class="filter-option"><input type="checkbox" checked data-category="other">Other</label>
-      </div>
-    </div>
-  </div>
   <button id="locate">Use my location</button>
   <div id="status">Loading tree inventory…</div>
 </header>
 <main>
   <div id="map">
     <div id="legend" aria-label="Tree type legend">
-      <strong>Tree type</strong>
-      <div class="legend-row"><span class="legend-swatch" style="background:#22c55e"></span>Maple</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#4f46e5"></span>Linden</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#f59e0b"></span>Oak</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#ef4444"></span>Elm</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#0f766e"></span>Cherry / Pear</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#7c3aed"></span>Honeylocust / Ash</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#0ea5e9"></span>Crabapple / Serviceberry</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#f43f5e"></span>Hornbeam / Birch</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#a16207"></span>Plane</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#16a34a"></span>Ginkgo</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#64748b"></span>Other</div>
-      <div class="legend-row"><span class="legend-swatch" style="background:#ffffff; border-color:#cbd5e1"></span>Dot size = tree size</div>
+      <strong>Tree types</strong>
+      <div id="legendContent">
+        <div class="legend-group" data-group="shade">
+          <div class="legend-group-header" data-group="shade">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Common shade</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="maple"><span class="legend-swatch" data-category="maple" style="background:#22c55e"></span>Maple</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="linden"><span class="legend-swatch" data-category="linden" style="background:#4f46e5"></span>Linden</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="oak"><span class="legend-swatch" data-category="oak" style="background:#f59e0b"></span>Oak</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="elm"><span class="legend-swatch" data-category="elm" style="background:#ef4444"></span>Elm</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="ornamental">
+          <div class="legend-group-header" data-group="ornamental">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Ornamental</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="cherry"><span class="legend-swatch" data-category="cherry" style="background:#0f766e"></span>Cherry / Pear</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="honeylocust"><span class="legend-swatch" data-category="honeylocust" style="background:#7c3aed"></span>Honeylocust / Ash</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="crabapple"><span class="legend-swatch" data-category="crabapple" style="background:#0ea5e9"></span>Crabapple / Serviceberry</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="hornbeam"><span class="legend-swatch" data-category="hornbeam" style="background:#f43f5e"></span>Hornbeam / Birch</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="plane"><span class="legend-swatch" data-category="plane" style="background:#a16207"></span>Plane</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="ginkgo"><span class="legend-swatch" data-category="ginkgo" style="background:#16a34a"></span>Ginkgo</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="other">
+          <div class="legend-group-header" data-group="other">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Other</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="other"><span class="legend-swatch" data-category="other" style="background:#64748b"></span>Other</label>
+          </div>
+        </div>
+      </div>
+      <div class="legend-note"><span class="legend-swatch" style="background:#ffffff; border-color:#cbd5e1"></span>Dot size = tree size</div>
     </div>
   </div>
 </main>
@@ -327,50 +335,33 @@ function filterRows() {
   refreshVisibleRows();
 }
 
-function bindCategoryFilters() {
-  const toggleButton = document.getElementById('categoryToggle');
-  const menu = document.getElementById('categoryMenu');
-  const allCheckbox = menu.querySelector('input[data-category="all"]');
-  const categoryCheckboxes = Array.from(menu.querySelectorAll('input[type="checkbox"]')).filter(input => input !== allCheckbox);
-
-  toggleButton.addEventListener('click', () => {
-    const isHidden = menu.hidden;
-    menu.hidden = !isHidden;
+function bindLegendFilters() {
+  const legendContent = document.getElementById('legendContent');
+  const legendCheckboxes = Array.from(legendContent.querySelectorAll('input[type="checkbox"][data-category]'));
+  
+  // Handle expand/collapse for groups
+  const groupHeaders = legendContent.querySelectorAll('.legend-group-header');
+  groupHeaders.forEach(header => {
+    header.addEventListener('click', () => {
+      const group = header.closest('.legend-group');
+      group.classList.toggle('collapsed');
+    });
   });
-
-  document.addEventListener('click', event => {
-    if (!menu.contains(event.target) && event.target !== toggleButton) {
-      menu.hidden = true;
-    }
-  });
-
-  function syncAllCheckbox() {
-    const allSelected = categoryCheckboxes.length > 0 && categoryCheckboxes.every(input => input.checked);
-    allCheckbox.checked = allSelected;
-  }
 
   function updateSelectedCategories() {
-    if (allCheckbox.checked) {
-      selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','honeylocust','crabapple','hornbeam','plane','ginkgo','other']);
-    } else {
-      selectedCategoryKeys = new Set(categoryCheckboxes.filter(input => input.checked).map(input => input.dataset.category));
-    }
+    selectedCategoryKeys = new Set(legendCheckboxes.filter(input => input.checked).map(input => input.dataset.category));
     refreshVisibleRows();
   }
 
-  allCheckbox.addEventListener('change', () => {
-    categoryCheckboxes.forEach(input => {
-      input.checked = allCheckbox.checked;
-    });
-    updateSelectedCategories();
-  });
-
-  categoryCheckboxes.forEach(input => {
-    input.addEventListener('change', () => {
-      syncAllCheckbox();
+  legendCheckboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
       updateSelectedCategories();
     });
   });
+}
+
+function bindCategoryFilters() {
+  bindLegendFilters();
 }
 
 function tryGeolocate() {
