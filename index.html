@@ -15,10 +15,10 @@
   #status { color:#475569; font-size:0.95rem; }
   main { padding:16px; }
   #map { position:relative; height:calc(100vh - 92px); border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:visible; }
-  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:220px; max-height:60vh; overflow-y:auto; }
+  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:240px; max-height:65vh; overflow-y:auto; }
   #legend strong { display:block; margin-bottom:8px; font-size:0.95rem; }
-  #legendContent { display:flex; flex-direction:column; gap:6px; }
-  .legend-group { border-bottom:1px solid #e5e7eb; padding-bottom:6px; }
+  #legendContent { display:flex; flex-direction:column; gap:4px; }
+  .legend-group { border-bottom:1px solid #e5e7eb; padding-bottom:4px; }
   .legend-group:last-child { border-bottom:none; padding-bottom:0; }
   .legend-group-header { display:flex; align-items:center; gap:6px; cursor:pointer; padding:4px 0; user-select:none; }
   .legend-group-toggle { display:inline-block; width:16px; text-align:center; font-size:0.8rem; color:#64748b; transition:transform 0.2s; }
@@ -27,8 +27,6 @@
   .legend-group-title { font-weight:600; font-size:0.8rem; color:#64748b; text-transform:uppercase; letter-spacing:0.03em; }
   .legend-group-items { display:flex; flex-direction:column; gap:3px; padding-left:22px; margin-top:4px; }
   .legend-group.collapsed .legend-group-items { display:none; }
-  .legend-subgroup { margin-bottom:6px; }
-  .legend-subgroup-title { font-size:0.75rem; font-weight:600; text-transform:uppercase; color:#64748b; letter-spacing:0.02em; margin-bottom:3px; padding-left:2px; }
   .legend-item { display:flex; align-items:center; gap:6px; cursor:pointer; padding:2px 0; user-select:none; color:#1f2937; transition:color 0.15s; }
   .legend-item:hover { color:#0f172a; }
   .legend-item input { margin:0; cursor:pointer; }
@@ -78,41 +76,68 @@
             <label class="legend-item"><input type="checkbox" checked data-category="ginkgo"><span class="legend-swatch" data-category="ginkgo" style="background:#16a34a"></span>Ginkgo</label>
           </div>
         </div>
-        <div class="legend-group" data-group="other">
-          <div class="legend-group-header" data-group="other">
+        <div class="legend-group" data-group="conifer">
+          <div class="legend-group-header" data-group="conifer">
             <span class="legend-group-toggle">▼</span>
-            <span class="legend-group-title">Other trees</span>
+            <span class="legend-group-title">Conifers</span>
           </div>
           <div class="legend-group-items">
-            <div class="legend-subgroup">
-              <div class="legend-subgroup-title">Coniferous</div>
-              <label class="legend-item"><input type="checkbox" checked data-category="conifer"><span class="legend-swatch" data-category="conifer" style="background:#15803d"></span>Pine, Spruce, Hemlock, etc.</label>
-            </div>
-            <div class="legend-subgroup">
-              <div class="legend-subgroup-title">Dogwoods & Redbuds</div>
-              <label class="legend-item"><input type="checkbox" checked data-category="dogwood"><span class="legend-swatch" data-category="dogwood" style="background:#ec4899"></span>Dogwood, Redbud</label>
-            </div>
-            <div class="legend-subgroup">
-              <div class="legend-subgroup-title">Hawthorns</div>
-              <label class="legend-item"><input type="checkbox" checked data-category="hawthorn"><span class="legend-swatch" data-category="hawthorn" style="background:#d97706"></span>Hawthorn, Medlar</label>
-            </div>
-            <div class="legend-subgroup">
-              <div class="legend-subgroup-title">Specialty Trees</div>
-              <label class="legend-item"><input type="checkbox" checked data-category="specialty"><span class="legend-swatch" data-category="specialty" style="background:#8b5cf6"></span>Zelkova, Goldenrain, Katsura, Sweetgum, Tulip, Catalpa</label>
-            </div>
-            <div class="legend-subgroup">
-              <div class="legend-subgroup-title">Magnolias & Holly</div>
-              <label class="legend-item"><input type="checkbox" checked data-category="magnolia"><span class="legend-swatch" data-category="magnolia" style="background:#db2777"></span>Magnolia, Holly</label>
-            </div>
-            <div class="legend-subgroup">
-              <div class="legend-subgroup-title">Nut & Seed Trees</div>
-              <label class="legend-item"><input type="checkbox" checked data-category="nut_trees"><span class="legend-swatch" data-category="nut_trees" style="background:#92400e"></span>Walnut, Hickory, Buckeye, Chestnut</label>
-            </div>
-            <div class="legend-subgroup">
-              <div class="legend-subgroup-title">Miscellaneous</div>
-              <label class="legend-item"><input type="checkbox" checked data-category="other"><span class="legend-swatch" data-category="other" style="background:#64748b"></span>Other</label>
-              <label class="legend-item"><input type="checkbox" checked data-category="unmapped"><span class="legend-swatch" data-category="unmapped" style="background:#9ca3af"></span>Unknown / Unmapped</label>
-            </div>
+            <label class="legend-item"><input type="checkbox" checked data-category="conifer"><span class="legend-swatch" data-category="conifer" style="background:#15803d"></span>Pine, Spruce, Hemlock, Cedar, Fir, etc.</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="dogwood">
+          <div class="legend-group-header" data-group="dogwood">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Dogwoods & Redbuds</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="dogwood"><span class="legend-swatch" data-category="dogwood" style="background:#ec4899"></span>Dogwood, Redbud, Cercis</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="hawthorn">
+          <div class="legend-group-header" data-group="hawthorn">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Hawthorns</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="hawthorn"><span class="legend-swatch" data-category="hawthorn" style="background:#d97706"></span>Hawthorn Species</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="specialty">
+          <div class="legend-group-header" data-group="specialty">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Specialty Trees</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="specialty"><span class="legend-swatch" data-category="specialty" style="background:#8b5cf6"></span>Zelkova, Goldenrain, Katsura, Sweetgum, Tulip, Catalpa, etc.</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="magnolia">
+          <div class="legend-group-header" data-group="magnolia">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Magnolias & Holly</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="magnolia"><span class="legend-swatch" data-category="magnolia" style="background:#db2777"></span>Magnolia, Holly, Ilex</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="nut_trees">
+          <div class="legend-group-header" data-group="nut_trees">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Nut & Seed Trees</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="nut_trees"><span class="legend-swatch" data-category="nut_trees" style="background:#92400e"></span>Walnut, Hickory, Buckeye, Chestnut</label>
+          </div>
+        </div>
+        <div class="legend-group" data-group="misc">
+          <div class="legend-group-header" data-group="misc">
+            <span class="legend-group-toggle">▼</span>
+            <span class="legend-group-title">Other & Unmapped</span>
+          </div>
+          <div class="legend-group-items">
+            <label class="legend-item"><input type="checkbox" checked data-category="other"><span class="legend-swatch" data-category="other" style="background:#64748b"></span>Other</label>
+            <label class="legend-item"><input type="checkbox" checked data-category="unmapped"><span class="legend-swatch" data-category="unmapped" style="background:#9ca3af"></span>Unknown / Unmapped</label>
           </div>
         </div>
       </div>
