@@ -15,7 +15,17 @@
   #status { color:#475569; font-size:0.95rem; }
   main { padding:16px; }
   #map { position:relative; height:calc(100vh - 92px); border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:visible; }
-  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:240px; max-height:65vh; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:240px; max-height:65vh; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; transition:all 0.3s ease; }
+  #legend.collapsed { max-width:44px; padding:8px 4px; }
+  #legend.collapsed .legend-header, #legend.collapsed .legend-select-all, #legend.collapsed #legendContent { display:none; }
+  .legend-collapse-button { display:none; border:none; background:transparent; cursor:pointer; color:#64748b; padding:0; width:24px; height:24px; align-items:center; justify-content:center; font-size:1rem; transition:color 0.15s; }
+  .legend-collapse-button:hover { color:#0f172a; }
+  #legend.collapsed .legend-collapse-button { display:flex; }
+  @media (max-width: 768px) {
+    .legend-collapse-button { display:flex; }
+    #legend { max-width:240px; }
+    #legend.collapsed { max-width:44px; }
+  }
   #legend strong { display:block; font-size:0.95rem; }
   .legend-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
   .legend-mode-toggle { display:inline-flex; align-items:center; gap:4px; padding:2px; border:1px solid #e2e8f0; border-radius:999px; background:#f8fafc; }
@@ -54,6 +64,7 @@
 <main>
   <div id="map">
     <div id="legend" aria-label="Tree type legend">
+      <button class="legend-collapse-button" id="legendCollapseBtn" title="Collapse legend">✕</button>
       <div class="legend-header">
         <strong>Tree types</strong>
         <div class="legend-mode-toggle" role="group" aria-label="Legend label mode">
@@ -467,6 +478,18 @@ function bindLegendModeToggle() {
       buttons.forEach(btn => btn.classList.toggle('active', btn === button));
       updateLegendLabels();
     });
+  });
+}
+
+function bindLegendCollapseToggle() {
+  const collapseBtn = document.getElementById('legendCollapseBtn');
+  if (!collapseBtn) return;
+  collapseBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const legend = document.getElementById('legend');
+    legend.classList.toggle('collapsed');
+    collapseBtn.title = legend.classList.contains('collapsed') ? 'Expand legend' : 'Collapse legend';
+    collapseBtn.textContent = legend.classList.contains('collapsed') ? '☰' : '✕';
   });
 }
 
@@ -1033,6 +1056,7 @@ function bindCategoryFilters() {
 
 attachLegendScrollProtection();
 bindLegendModeToggle();
+bindLegendCollapseToggle();
 updateLegendLabels();
 
 function tryGeolocate() {
