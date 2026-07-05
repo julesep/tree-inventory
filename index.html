@@ -791,6 +791,9 @@ function applyDbhFilter(rowsToFilter) {
 
 function bindDbhFilter() {
   if (!dbhMinInput || !dbhMaxInput) return;
+  let isDraggingThumb = false;
+  let dragLockThumb = null;
+  let overlapAnchorIndex = null;
 
   const setActiveThumb = (thumb) => {
     if (thumb === 'min') {
@@ -819,40 +822,72 @@ function bindDbhFilter() {
     refreshVisibleRows();
   };
 
-  const updateMinRange = () => {
+  const handleThumbInput = (sourceThumb, rawValue) => {
     if (dbhFilterSyncInProgress) return;
     dbhFilterSyncInProgress = true;
     try {
-      const minRawIndex = Number(dbhMinInput.value);
-      dbhMinIndex = Math.min(minRawIndex, dbhMaxIndex);
-      setActiveThumb('min');
+      const lastIndex = Math.max(0, dbhBreakpoints.length - 1);
+      const nextIndex = Math.max(0, Math.min(lastIndex, Number(rawValue)));
+      const isOverlapped = dbhMinIndex === dbhMaxIndex;
+
+      // Lock each drag gesture to one thumb so both never move in the same gesture.
+      if (!dragLockThumb && isOverlapped) {
+        const anchor = overlapAnchorIndex === null ? dbhMinIndex : overlapAnchorIndex;
+        if (nextIndex > anchor) {
+          dragLockThumb = 'max';
+        } else if (nextIndex < anchor) {
+          dragLockThumb = 'min';
+        }
+      }
+
+      const effectiveThumb = dragLockThumb || sourceThumb;
+      if (effectiveThumb === 'min') {
+        dbhMinIndex = Math.min(nextIndex, dbhMaxIndex);
+        setActiveThumb('min');
+      } else {
+        dbhMaxIndex = Math.max(nextIndex, dbhMinIndex);
+        setActiveThumb('max');
+      }
+
       syncSelection();
     } finally {
       dbhFilterSyncInProgress = false;
     }
   };
 
-  const updateMaxRange = () => {
-    if (dbhFilterSyncInProgress) return;
-    dbhFilterSyncInProgress = true;
-    try {
-      const maxRawIndex = Number(dbhMaxInput.value);
-      dbhMaxIndex = Math.max(maxRawIndex, dbhMinIndex);
-      setActiveThumb('max');
-      syncSelection();
-    } finally {
-      dbhFilterSyncInProgress = false;
-    }
+  const updateMinRange = () => handleThumbInput('min', dbhMinInput.value);
+  const updateMaxRange = () => handleThumbInput('max', dbhMaxInput.value);
+
+  const beginThumbDrag = (thumb) => {
+    isDraggingThumb = true;
+    const startsOverlapped = dbhMinIndex === dbhMaxIndex;
+    dragLockThumb = startsOverlapped ? null : thumb;
+    overlapAnchorIndex = startsOverlapped ? dbhMinIndex : null;
+    setActiveThumb(thumb);
+  };
+
+  const endThumbDrag = () => {
+    if (!isDraggingThumb) return;
+    isDraggingThumb = false;
+    dragLockThumb = null;
+    overlapAnchorIndex = null;
   };
 
   dbhMinInput.addEventListener('input', updateMinRange);
   dbhMaxInput.addEventListener('input', updateMaxRange);
-  dbhMinInput.addEventListener('pointerdown', () => setActiveThumb('min'));
-  dbhMaxInput.addEventListener('pointerdown', () => setActiveThumb('max'));
+  dbhMinInput.addEventListener('pointerdown', () => beginThumbDrag('min'));
+  dbhMaxInput.addEventListener('pointerdown', () => beginThumbDrag('max'));
+  dbhMinInput.addEventListener('mousedown', () => beginThumbDrag('min'));
+  dbhMaxInput.addEventListener('mousedown', () => beginThumbDrag('max'));
   dbhMinInput.addEventListener('focus', () => setActiveThumb('min'));
   dbhMaxInput.addEventListener('focus', () => setActiveThumb('max'));
-  dbhMinInput.addEventListener('touchstart', () => setActiveThumb('min'), { passive: true });
-  dbhMaxInput.addEventListener('touchstart', () => setActiveThumb('max'), { passive: true });
+  dbhMinInput.addEventListener('touchstart', () => beginThumbDrag('min'), { passive: true });
+  dbhMaxInput.addEventListener('touchstart', () => beginThumbDrag('max'), { passive: true });
+  window.addEventListener('pointerup', endThumbDrag);
+  window.addEventListener('pointercancel', endThumbDrag);
+  window.addEventListener('mouseup', endThumbDrag);
+  window.addEventListener('touchend', endThumbDrag, { passive: true });
+  window.addEventListener('touchcancel', endThumbDrag, { passive: true });
   setActiveThumb('max');
   if (dbhIncludeNullInput) {
     includeNullDbh = dbhIncludeNullInput.checked;
