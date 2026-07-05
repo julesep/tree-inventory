@@ -435,6 +435,7 @@ let viewportRefreshTimer = null;
 let userLocationMarker = null;
 let userLocationCircle = null;
 let renderedMarkers = [];
+let persistentTreePopup = null;
 const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 let selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','plum','pear','honeylocust','ash','lilac','crabapple','serviceberry','hornbeam','birch','plane','ginkgo','pine','spruce','hemlock','cedar','fir','other_conifer','dogwood','redbud','cercis','hawthorn','magnolia','holly','ilex','zelkova','goldenrain','katsura','sweetgum','tulip','catalpa','walnut','hickory','buckeye','chestnut','dawn_redwood','baldcypress','paper_mulberry','other','unmapped']);
 const MAX_MARKERS = 1000;
@@ -508,20 +509,7 @@ function initMap() {
   markersLayer = L.layerGroup().addTo(map);
   map.setView([39.98, -75.16], 12);
   map.on('moveend zoomend resize', () => {
-    if (viewportRefreshTimer) window.clearTimeout(viewportRefreshTimer);
-    viewportRefreshTimer = window.setTimeout(() => {
-      renderMarkers(activeRows);
-      if (map && map.getZoom() <= 12) {
-        if (userLocationMarker) {
-          markersLayer.removeLayer(userLocationMarker);
-          userLocationMarker = null;
-        }
-        if (userLocationCircle) {
-          markersLayer.removeLayer(userLocationCircle);
-          userLocationCircle = null;
-        }
-      }
-    }, 80);
+    queueViewportRefresh();
   });
 }
 
@@ -552,6 +540,40 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;');
+}
+
+function openPersistentTreePopup(row, latLng) {
+  if (!map) return;
+  if (!persistentTreePopup) {
+    persistentTreePopup = L.popup({
+      closeButton: true,
+      autoPan: false,
+      keepInView: false,
+      autoClose: true,
+      closeOnClick: false
+    });
+  }
+  persistentTreePopup
+    .setLatLng(latLng)
+    .setContent(makePopup(row))
+    .openOn(map);
+}
+
+function queueViewportRefresh() {
+  if (viewportRefreshTimer) window.clearTimeout(viewportRefreshTimer);
+  viewportRefreshTimer = window.setTimeout(() => {
+    renderMarkers(activeRows);
+    if (map && map.getZoom() <= 12) {
+      if (userLocationMarker) {
+        markersLayer.removeLayer(userLocationMarker);
+        userLocationMarker = null;
+      }
+      if (userLocationCircle) {
+        markersLayer.removeLayer(userLocationCircle);
+        userLocationCircle = null;
+      }
+    }
+  }, 80);
 }
 
 function getCategoryKey(row) {
@@ -974,17 +996,12 @@ function renderMarkers(dataRows) {
           iconAnchor: [Math.round(hitRadius / 2), Math.round(hitRadius / 2)]
         })
       });
-      hitMarker.bindPopup(makePopup(row), {
-        closeButton: true,
-        autoPan: false,
-        keepInView: false
-      });
-      hitMarker.on('click', () => hitMarker.openPopup());
+      hitMarker.on('click', () => openPersistentTreePopup(row, latLng));
       hitMarker.on('touchstart', (event) => {
         if (event && event.originalEvent && typeof event.originalEvent.preventDefault === 'function') {
           event.originalEvent.preventDefault();
         }
-        hitMarker.openPopup();
+        openPersistentTreePopup(row, latLng);
       });
       hitMarker.addTo(markersLayer);
       renderedMarkers.push(hitMarker);
@@ -1102,7 +1119,8 @@ function tryGeolocate() {
   status.textContent = 'Detecting your location…';
   navigator.geolocation.getCurrentPosition(position => {
     const coords = [position.coords.latitude, position.coords.longitude];
-    map.setView(coords, 17);
+    map.stop();
+    map.setView(coords, 17, { animate: false });
     if (userLocationMarker) {
       markersLayer.removeLayer(userLocationMarker);
     }
