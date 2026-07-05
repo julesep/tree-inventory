@@ -15,18 +15,17 @@
   #status { color:#475569; font-size:0.95rem; }
   main { padding:16px; }
   #map { position:relative; height:calc(100vh - 92px); border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:visible; }
-  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:10px 12px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:240px; max-height:65vh; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; transition:all 0.3s ease; display:flex; flex-direction:column; }
-  #legend.collapsed { max-width:44px; padding:8px; overflow:visible; max-height:none; }
-  #legend.collapsed .legend-header, #legend.collapsed .legend-select-all, #legend.collapsed #legendContent, #legend.collapsed .legend-note { display:none; }
-  .legend-collapse-button { display:none; border:none; background:transparent; cursor:pointer; color:#64748b; padding:4px; width:32px; height:32px; font-size:1.2rem; transition:color 0.15s; align-items:center; justify-content:center; order:-1; margin-bottom:8px; }
-  .legend-collapse-button:hover { color:#0f172a; }
-  #legend.collapsed .legend-collapse-button { margin-bottom:0; }
+  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:340px; transition:all 0.3s ease; display:flex; overflow:hidden; }
+  .legend-scroll-content { display:flex; flex-direction:column; padding:10px 12px; max-height:65vh; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
+  #legend.collapsed { max-width:44px; max-height:none; }
+  #legend.collapsed .legend-scroll-content { display:none; }
+  .legend-collapse-button { display:flex; border:none; border-right:1px solid #e5e7eb; background:#f8fafc; cursor:pointer; color:#64748b; width:32px; min-height:44px; font-size:1.2rem; transition:color 0.15s, background-color 0.15s; align-items:center; justify-content:center; flex:0 0 32px; border-radius:10px 0 0 10px; }
+  .legend-collapse-button:hover { color:#0f172a; background:#f1f5f9; }
+  #legend.collapsed .legend-collapse-button { border-right:none; border-radius:10px; }
   @media (max-width: 768px) {
-    .legend-collapse-button { display:flex; }
-    #legend { max-width:240px; }
-    #legend.collapsed { max-width:44px; }
+    #legend { max-width: min(280px, calc(100vw - 32px)); }
   }
-  #legend strong { display:block; font-size:0.95rem; }
+  #legend strong { display:block; font-size:0.95rem; white-space:nowrap; }
   .legend-header { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }
   .legend-mode-toggle { display:inline-flex; align-items:center; gap:4px; padding:2px; border:1px solid #e2e8f0; border-radius:999px; background:#f8fafc; }
   .legend-mode-button { border:none; background:transparent; color:#64748b; border-radius:999px; padding:3px 8px; font-size:0.78rem; cursor:pointer; }
@@ -65,6 +64,7 @@
   <div id="map">
     <div id="legend" aria-label="Tree type legend">
       <button class="legend-collapse-button" id="legendCollapseBtn" title="Collapse legend">→</button>
+      <div class="legend-scroll-content">
       <div class="legend-header">
         <strong>Tree types</strong>
         <div class="legend-mode-toggle" role="group" aria-label="Legend label mode">
@@ -195,15 +195,6 @@
           </div>
         </div>
         <div id="legendContentScientific" class="legend-content-mode" style="display:none">
-          <div class="legend-group" data-group="aceraceae">
-            <div class="legend-group-header" data-group="aceraceae">
-              <span class="legend-group-toggle">▼</span>
-              <span class="legend-group-title">Aceraceae</span>
-            </div>
-            <div class="legend-group-items">
-              <label class="legend-item" data-common="Maple" data-scientific="Acer spp."><input type="checkbox" checked data-category="maple"><span class="legend-swatch" data-category="maple" style="background:#2f9e44"></span><span class="legend-label-text">Acer spp.</span></label>
-            </div>
-          </div>
           <div class="legend-group" data-group="altingiaceae">
             <div class="legend-group-header" data-group="altingiaceae">
               <span class="legend-group-toggle">▼</span>
@@ -267,6 +258,16 @@
             </div>
             <div class="legend-group-items">
               <label class="legend-item" data-common="Cedar" data-scientific="Thuja spp."><input type="checkbox" checked data-category="cedar"><span class="legend-swatch" data-category="cedar" style="background:#4ade80"></span><span class="legend-label-text">Thuja spp.</span></label>
+              <label class="legend-item" data-common="Dawn Redwood" data-scientific="Metasequoia glyptostroboides"><input type="checkbox" checked data-category="dawn_redwood"><span class="legend-swatch" data-category="dawn_redwood" style="background:#78350f"></span><span class="legend-label-text">Metasequoia glyptostroboides</span></label>
+              <label class="legend-item" data-common="Baldcypress" data-scientific="Taxodium distichum"><input type="checkbox" checked data-category="baldcypress"><span class="legend-swatch" data-category="baldcypress" style="background:#a16207"></span><span class="legend-label-text">Taxodium distichum</span></label>
+            </div>
+          </div>
+          <div class="legend-group" data-group="pinophyta_various">
+            <div class="legend-group-header" data-group="pinophyta_various">
+              <span class="legend-group-toggle">▼</span>
+              <span class="legend-group-title">Pinophyta (Various Families)</span>
+            </div>
+            <div class="legend-group-items">
               <label class="legend-item" data-common="Other conifers" data-scientific="Pinophyta (various)"><input type="checkbox" checked data-category="other_conifer"><span class="legend-swatch" data-category="other_conifer" style="background:#84cc16"></span><span class="legend-label-text">Pinophyta (various)</span></label>
             </div>
           </div>
@@ -288,6 +289,7 @@
             </div>
             <div class="legend-group-items">
               <label class="legend-item" data-common="Oak" data-scientific="Quercus spp."><input type="checkbox" checked data-category="oak"><span class="legend-swatch" data-category="oak" style="background:#7a9a2f"></span><span class="legend-label-text">Quercus spp.</span></label>
+              <label class="legend-item" data-common="Chestnut" data-scientific="Castanea spp."><input type="checkbox" checked data-category="chestnut"><span class="legend-swatch" data-category="chestnut" style="background:#78350f"></span><span class="legend-label-text">Castanea spp.</span></label>
             </div>
           </div>
           <div class="legend-group" data-group="ginkgoaceae">
@@ -307,7 +309,6 @@
             <div class="legend-group-items">
               <label class="legend-item" data-common="Walnut" data-scientific="Juglans spp."><input type="checkbox" checked data-category="walnut"><span class="legend-swatch" data-category="walnut" style="background:#92400e"></span><span class="legend-label-text">Juglans spp.</span></label>
               <label class="legend-item" data-common="Hickory" data-scientific="Carya spp."><input type="checkbox" checked data-category="hickory"><span class="legend-swatch" data-category="hickory" style="background:#b45309"></span><span class="legend-label-text">Carya spp.</span></label>
-              <label class="legend-item" data-common="Chestnut" data-scientific="Castanea spp."><input type="checkbox" checked data-category="chestnut"><span class="legend-swatch" data-category="chestnut" style="background:#78350f"></span><span class="legend-label-text">Castanea spp.</span></label>
             </div>
           </div>
           <div class="legend-group" data-group="magnoliaceae">
@@ -380,14 +381,15 @@
               <span class="legend-group-title">Sapindaceae</span>
             </div>
             <div class="legend-group-items">
+              <label class="legend-item" data-common="Maple" data-scientific="Acer spp."><input type="checkbox" checked data-category="maple"><span class="legend-swatch" data-category="maple" style="background:#2f9e44"></span><span class="legend-label-text">Acer spp.</span></label>
               <label class="legend-item" data-common="Goldenrain" data-scientific="Koelreuteria paniculata"><input type="checkbox" checked data-category="goldenrain"><span class="legend-swatch" data-category="goldenrain" style="background:#c084fc"></span><span class="legend-label-text">Koelreuteria paniculata</span></label>
               <label class="legend-item" data-common="Buckeye" data-scientific="Aesculus spp."><input type="checkbox" checked data-category="buckeye"><span class="legend-swatch" data-category="buckeye" style="background:#d97706"></span><span class="legend-label-text">Aesculus spp.</span></label>
             </div>
           </div>
-          <div class="legend-group" data-group="tiliaceae">
-            <div class="legend-group-header" data-group="tiliaceae">
+          <div class="legend-group" data-group="malvaceae">
+            <div class="legend-group-header" data-group="malvaceae">
               <span class="legend-group-toggle">▼</span>
-              <span class="legend-group-title">Tiliaceae</span>
+              <span class="legend-group-title">Malvaceae</span>
             </div>
             <div class="legend-group-items">
               <label class="legend-item" data-common="Linden" data-scientific="Tilia spp."><input type="checkbox" checked data-category="linden"><span class="legend-swatch" data-category="linden" style="background:#5aa64b"></span><span class="legend-label-text">Tilia spp.</span></label>
@@ -403,19 +405,10 @@
               <label class="legend-item" data-common="Zelkova" data-scientific="Zelkova spp."><input type="checkbox" checked data-category="zelkova"><span class="legend-swatch" data-category="zelkova" style="background:#8b5cf6"></span><span class="legend-label-text">Zelkova spp.</span></label>
             </div>
           </div>
-          <div class="legend-group" data-group="taxodiaceae">
-            <div class="legend-group-header" data-group="taxodiaceae">
-              <span class="legend-group-toggle">▼</span>
-              <span class="legend-group-title">Taxodiaceae</span>
-            </div>
-            <div class="legend-group-items">
-              <label class="legend-item" data-common="Dawn Redwood" data-scientific="Metasequoia glyptostroboides"><input type="checkbox" checked data-category="dawn_redwood"><span class="legend-swatch" data-category="dawn_redwood" style="background:#78350f"></span><span class="legend-label-text">Metasequoia glyptostroboides</span></label>
-              <label class="legend-item" data-common="Baldcypress" data-scientific="Taxodium distichum"><input type="checkbox" checked data-category="baldcypress"><span class="legend-swatch" data-category="baldcypress" style="background:#a16207"></span><span class="legend-label-text">Taxodium distichum</span></label>
-            </div>
-          </div>
         </div>
       </div>
       <div class="legend-note"><span class="legend-swatch" style="background:#ffffff; border-color:#cbd5e1"></span>Dot size = tree size</div>
+      </div>
     </div>
   </div>
 </main>
@@ -434,6 +427,7 @@ let latKey = null;
 let lonKey = null;
 let map = null;
 let markersLayer = null;
+let markerRenderer = null;
 let activeRows = [];
 let viewportRefreshTimer = null;
 let userLocationMarker = null;
@@ -499,6 +493,8 @@ function initMap() {
     return;
   }
   map = L.map('map', { zoomControl:true, preferCanvas:true });
+  // Add extra tap tolerance on coarse pointers so small dots are easier to hit on mobile.
+  markerRenderer = L.canvas({ tolerance: window.matchMedia('(pointer: coarse)').matches ? 10 : 2 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap contributors © CARTO',
     subdomains: 'abcd',
@@ -741,8 +737,8 @@ function getFamilyFromTreeName(treeName) {
   
   // Map common tree names and patterns to their families
   const familyMap = {
-    'maple': 'Aceraceae',
-    'linden': 'Tiliaceae',
+    'maple': 'Sapindaceae',
+    'linden': 'Malvaceae',
     'oak': 'Fagaceae',
     'elm': 'Ulmaceae',
     'cherry': 'Rosaceae',
@@ -768,10 +764,10 @@ function getFamilyFromTreeName(treeName) {
     'fir': 'Pinaceae',
     'cedar': 'Cupressaceae',
     'thuja': 'Cupressaceae',
-    'dawn redwood': 'Taxodiaceae',
-    'metasequoia': 'Taxodiaceae',
-    'baldcypress': 'Taxodiaceae',
-    'taxodium': 'Taxodiaceae',
+    'dawn redwood': 'Cupressaceae',
+    'metasequoia': 'Cupressaceae',
+    'baldcypress': 'Cupressaceae',
+    'taxodium': 'Cupressaceae',
     'dogwood': 'Cornaceae',
     'cornus': 'Cornaceae',
     'magnolia': 'Magnoliaceae',
@@ -791,8 +787,8 @@ function getFamilyFromTreeName(treeName) {
     'juglans': 'Juglandaceae',
     'hickory': 'Juglandaceae',
     'carya': 'Juglandaceae',
-    'chestnut': 'Juglandaceae',
-    'castanea': 'Juglandaceae',
+    'chestnut': 'Fagaceae',
+    'castanea': 'Fagaceae',
     'buckeye': 'Sapindaceae',
     'aesculus': 'Sapindaceae',
     'paper mulberry': 'Moraceae',
@@ -949,7 +945,8 @@ function renderMarkers(dataRows) {
         radius: markerRadius,
         color: markerStyle.color,
         fillColor: markerStyle.fillColor,
-        fillOpacity: 0.85
+        fillOpacity: 0.85,
+        renderer: markerRenderer || undefined
       });
       marker.bindPopup(makePopup(row));
       marker.addTo(markersLayer);
