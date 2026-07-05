@@ -696,7 +696,9 @@ function updateDbhFilterLabel() {
     dbhFilterValue.textContent = 'All sizes (in)';
     return;
   }
-  if (dbhMaxIndex === dbhBreakpoints.length - 1) {
+  const lastBreakpoint = dbhBreakpoints[dbhBreakpoints.length - 1] || dbhRangeMax;
+  const isOpenEnded = dbhRangeMax > lastBreakpoint;
+  if (isOpenEnded && dbhMaxIndex === dbhBreakpoints.length - 1) {
     dbhFilterValue.textContent = `${selectedDbhMin}+ in`;
     return;
   }
@@ -753,9 +755,6 @@ function initializeDbhFilter(dataRows) {
   for (let value = 10; value <= tailStart; value += 10) {
     dbhBreakpoints.push(value);
   }
-  if (dbhBreakpoints[dbhBreakpoints.length - 1] !== dbhRangeMax) {
-    dbhBreakpoints.push(dbhRangeMax);
-  }
 
   dbhMinIndex = 0;
   dbhMaxIndex = dbhBreakpoints.length - 1;
@@ -793,35 +792,68 @@ function applyDbhFilter(rowsToFilter) {
 function bindDbhFilter() {
   if (!dbhMinInput || !dbhMaxInput) return;
 
-  const updateRange = () => {
+  const setActiveThumb = (thumb) => {
+    if (thumb === 'min') {
+      dbhMinInput.style.zIndex = '6';
+      dbhMaxInput.style.zIndex = '5';
+    } else {
+      dbhMaxInput.style.zIndex = '6';
+      dbhMinInput.style.zIndex = '5';
+    }
+  };
+
+  const syncSelection = () => {
+    const lastIndex = Math.max(0, dbhBreakpoints.length - 1);
+    const lastBreakpoint = dbhBreakpoints[lastIndex] || dbhRangeMax;
+    const isOpenEnded = dbhRangeMax > lastBreakpoint;
+    selectedDbhMin = dbhBreakpoints[dbhMinIndex];
+    selectedDbhMax = (isOpenEnded && dbhMaxIndex === lastIndex) ? dbhRangeMax : dbhBreakpoints[dbhMaxIndex];
+
+    const clampedMin = String(dbhMinIndex);
+    const clampedMax = String(dbhMaxIndex);
+    if (dbhMinInput.value !== clampedMin) dbhMinInput.value = clampedMin;
+    if (dbhMaxInput.value !== clampedMax) dbhMaxInput.value = clampedMax;
+
+    updateDbhFilterLabel();
+    updateDbhRangeTrack();
+    refreshVisibleRows();
+  };
+
+  const updateMinRange = () => {
     if (dbhFilterSyncInProgress) return;
     dbhFilterSyncInProgress = true;
     try {
-      const lastIndex = Math.max(0, dbhBreakpoints.length - 1);
-      const maxMinIndex = Math.max(0, lastIndex - 1);
       const minRawIndex = Number(dbhMinInput.value);
-      const maxRawIndex = Number(dbhMaxInput.value);
-      dbhMinIndex = Math.min(Math.min(minRawIndex, maxRawIndex), maxMinIndex);
-      dbhMaxIndex = Math.max(minRawIndex, maxRawIndex);
-      if (dbhMaxIndex < dbhMinIndex) dbhMaxIndex = dbhMinIndex;
-      selectedDbhMin = dbhBreakpoints[dbhMinIndex];
-      selectedDbhMax = dbhBreakpoints[dbhMaxIndex];
-
-      const clampedMin = String(dbhMinIndex);
-      const clampedMax = String(dbhMaxIndex);
-      if (dbhMinInput.value !== clampedMin) dbhMinInput.value = clampedMin;
-      if (dbhMaxInput.value !== clampedMax) dbhMaxInput.value = clampedMax;
-
-      updateDbhFilterLabel();
-      updateDbhRangeTrack();
-      refreshVisibleRows();
+      dbhMinIndex = Math.min(minRawIndex, dbhMaxIndex);
+      setActiveThumb('min');
+      syncSelection();
     } finally {
       dbhFilterSyncInProgress = false;
     }
   };
 
-  dbhMinInput.addEventListener('input', updateRange);
-  dbhMaxInput.addEventListener('input', updateRange);
+  const updateMaxRange = () => {
+    if (dbhFilterSyncInProgress) return;
+    dbhFilterSyncInProgress = true;
+    try {
+      const maxRawIndex = Number(dbhMaxInput.value);
+      dbhMaxIndex = Math.max(maxRawIndex, dbhMinIndex);
+      setActiveThumb('max');
+      syncSelection();
+    } finally {
+      dbhFilterSyncInProgress = false;
+    }
+  };
+
+  dbhMinInput.addEventListener('input', updateMinRange);
+  dbhMaxInput.addEventListener('input', updateMaxRange);
+  dbhMinInput.addEventListener('pointerdown', () => setActiveThumb('min'));
+  dbhMaxInput.addEventListener('pointerdown', () => setActiveThumb('max'));
+  dbhMinInput.addEventListener('focus', () => setActiveThumb('min'));
+  dbhMaxInput.addEventListener('focus', () => setActiveThumb('max'));
+  dbhMinInput.addEventListener('touchstart', () => setActiveThumb('min'), { passive: true });
+  dbhMaxInput.addEventListener('touchstart', () => setActiveThumb('max'), { passive: true });
+  setActiveThumb('max');
   if (dbhIncludeNullInput) {
     includeNullDbh = dbhIncludeNullInput.checked;
     dbhIncludeNullInput.addEventListener('change', () => {
