@@ -432,6 +432,7 @@ let activeRows = [];
 let viewportRefreshTimer = null;
 let userLocationMarker = null;
 let userLocationCircle = null;
+const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 let selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','plum','pear','honeylocust','ash','lilac','crabapple','serviceberry','hornbeam','birch','plane','ginkgo','pine','spruce','hemlock','cedar','fir','other_conifer','dogwood','redbud','cercis','hawthorn','magnolia','holly','ilex','zelkova','goldenrain','katsura','sweetgum','tulip','catalpa','walnut','hickory','buckeye','chestnut','dawn_redwood','baldcypress','paper_mulberry','other','unmapped']);
 const MAX_MARKERS = 1000;
 const MARKER_BATCH_SIZE = 200;
@@ -494,7 +495,7 @@ function initMap() {
   }
   map = L.map('map', { zoomControl:true, preferCanvas:true });
   // Add extra tap tolerance on coarse pointers so small dots are easier to hit on mobile.
-  markerRenderer = L.canvas({ tolerance: window.matchMedia('(pointer: coarse)').matches ? 10 : 2 });
+  markerRenderer = L.canvas({ tolerance: isCoarsePointer ? 18 : 2 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap contributors © CARTO',
     subdomains: 'abcd',
@@ -502,7 +503,7 @@ function initMap() {
   }).addTo(map);
   markersLayer = L.layerGroup().addTo(map);
   map.setView([39.98, -75.16], 12);
-  map.on('move zoom resize', () => {
+  map.on('moveend zoomend resize', () => {
     if (viewportRefreshTimer) window.clearTimeout(viewportRefreshTimer);
     viewportRefreshTimer = window.setTimeout(() => {
       renderMarkers(activeRows);
@@ -647,11 +648,21 @@ function getMarkerColor(row) {
 
 function getMarkerRadius(row) {
   const dbhValue = parseFloat(row.tree_dbh || row.dbh || row.Tree_DBH || row['tree_dbh'] || '');
-  if (!Number.isFinite(dbhValue)) return 4;
-  if (dbhValue < 10) return 3;
-  if (dbhValue < 20) return 5;
-  if (dbhValue < 30) return 7;
-  return 9;
+  let baseRadius;
+  if (!Number.isFinite(dbhValue)) {
+    baseRadius = 4;
+  } else if (dbhValue < 10) {
+    baseRadius = 3;
+  } else if (dbhValue < 20) {
+    baseRadius = 5;
+  } else if (dbhValue < 30) {
+    baseRadius = 7;
+  } else {
+    baseRadius = 9;
+  }
+
+  if (!isCoarsePointer) return baseRadius;
+  return Math.max(8, baseRadius + 2);
 }
 
 function selectRowsToRender(rows, limit) {
@@ -949,6 +960,13 @@ function renderMarkers(dataRows) {
         renderer: markerRenderer || undefined
       });
       marker.bindPopup(makePopup(row));
+      marker.on('click', () => marker.openPopup());
+      marker.on('touchstart', (event) => {
+        if (event && event.originalEvent && typeof event.originalEvent.preventDefault === 'function') {
+          event.originalEvent.preventDefault();
+        }
+        marker.openPopup();
+      });
       marker.addTo(markersLayer);
     }
 
