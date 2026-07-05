@@ -8,20 +8,44 @@
 <style>
   :root { color-scheme: light; }
   body, html { margin:0; padding:0; height:100%; font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background:#f7f9fc; color:#1f2937; }
-  header { position:sticky; top:0; z-index:1000; background:#fff; border-bottom:1px solid #e5e7eb; padding:12px 16px; display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+  header { position:sticky; top:0; z-index:1000; background:#fff; border-bottom:1px solid #e5e7eb; padding:12px 16px; display:grid; grid-template-columns:minmax(220px, 1fr) minmax(240px, 300px) max-content; column-gap:10px; row-gap:8px; align-items:center; }
   #search { flex:1; min-width:220px; padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:1rem; }
+  .dbh-filter { width:300px; flex:0 0 300px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:8px; background:#fff; }
+  .dbh-filter-label { display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; font-weight:600; color:#475569; margin-bottom:4px; }
+  .dbh-filter-value { min-width:10ch; text-align:right; font-size:0.76rem; color:#0f172a; font-variant-numeric:tabular-nums; }
+  .dbh-range-wrap { position:relative; height:24px; --range-start:0%; --range-end:100%; }
+  .dbh-range-track { position:absolute; left:0; right:0; top:8px; height:6px; border-radius:999px; background:linear-gradient(to right, #dbe4f0 var(--range-start), #3b82f6 var(--range-start), #3b82f6 var(--range-end), #dbe4f0 var(--range-end)); z-index:1; }
+  .dbh-range { position:absolute; left:0; top:8px; width:100%; margin:0; appearance:none; background:none; pointer-events:none; z-index:3; }
+  .dbh-range::-webkit-slider-runnable-track { height:6px; background:transparent; border-radius:999px; }
+  .dbh-range::-moz-range-track { height:6px; background:transparent; border-radius:999px; }
+  .dbh-range::-webkit-slider-thumb { appearance:none; margin-top:-2px; width:16px; height:10px; border-radius:3px; border:1px solid #1d4ed8; background:#2563eb; pointer-events:auto; }
+  .dbh-range::-moz-range-thumb { width:16px; height:10px; border-radius:3px; border:1px solid #1d4ed8; background:#2563eb; pointer-events:auto; }
+  .dbh-tick-marks { position:absolute; left:0; right:0; top:8px; height:10px; pointer-events:none; z-index:2; }
+  .dbh-tick { position:absolute; width:2px; height:10px; background:#94a3b8; transform:translateX(-50%); }
+  .dbh-tick.first { left:0 !important; transform:none; }
+  .dbh-tick.last { left:100% !important; transform:translateX(-100%); }
+  .dbh-null-toggle { margin-top:6px; display:flex; align-items:center; gap:6px; font-size:0.76rem; color:#475569; }
+  .dbh-null-toggle input { margin:0; }
   #locate { padding:10px 14px; border:none; background:#0078ff; color:#fff; border-radius:8px; cursor:pointer; }
   #locate:hover { opacity:.9; }
-  #status { color:#475569; font-size:0.95rem; }
+  #status { grid-column:1 / -1; color:#475569; font-size:0.95rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   main { padding:16px; }
   #map { position:relative; height:calc(100vh - 92px); border:1px solid #e5e7eb; border-radius:12px; background:#fff; overflow:visible; }
-  #legend { position:absolute; top:12px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:340px; transition:all 0.3s ease; display:flex; overflow:hidden; }
+  #legend { position:absolute; top:84px; right:12px; z-index:500; background:#fff; border:1px solid #e5e7eb; border-radius:10px; box-shadow:0 4px 12px rgba(15, 23, 42, 0.12); font-size:0.9rem; line-height:1.4; max-width:340px; transition:all 0.3s ease; display:flex; overflow:hidden; }
   .legend-scroll-content { display:flex; flex-direction:column; padding:10px 12px; max-height:65vh; overflow-y:auto; overflow-x:hidden; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; }
   #legend.collapsed { max-width:44px; max-height:none; }
   #legend.collapsed .legend-scroll-content { display:none; }
   .legend-collapse-button { display:flex; border:none; border-right:1px solid #e5e7eb; background:#f8fafc; cursor:pointer; color:#64748b; width:32px; min-height:44px; font-size:1.2rem; transition:color 0.15s, background-color 0.15s; align-items:center; justify-content:center; flex:0 0 32px; border-radius:10px 0 0 10px; }
   .legend-collapse-button:hover { color:#0f172a; background:#f1f5f9; }
   #legend.collapsed .legend-collapse-button { border-right:none; border-radius:10px; }
+  @media (max-width: 1150px) {
+    header { grid-template-columns:minmax(220px, 1fr) max-content; }
+    .dbh-filter { grid-column:1 / -1; width:100%; flex:none; }
+  }
+  @media (max-width: 900px) {
+    header { grid-template-columns:1fr; }
+    .dbh-filter { width:100%; flex:none; }
+  }
   @media (max-width: 768px) {
     #legend { max-width: min(280px, calc(100vw - 32px)); }
   }
@@ -59,6 +83,19 @@
 <body>
 <header>
   <input id="search" type="search" placeholder="Search tree records by any field" />
+  <div class="dbh-filter" id="dbhFilter">
+    <div class="dbh-filter-label">
+      <span>Tree DBH (inches)</span>
+      <span class="dbh-filter-value" id="dbhFilterValue">All sizes</span>
+    </div>
+    <div class="dbh-range-wrap">
+      <div class="dbh-range-track" aria-hidden="true"></div>
+      <input id="dbhMin" class="dbh-range" type="range" min="0" max="10" value="0" step="1" disabled />
+      <input id="dbhMax" class="dbh-range" type="range" min="0" max="10" value="10" step="1" disabled />
+      <div id="dbhTickMarks" class="dbh-tick-marks" aria-hidden="true"></div>
+    </div>
+    <label class="dbh-null-toggle"><input id="dbhIncludeNull" type="checkbox" checked />Include null/invalid DBH</label>
+  </div>
   <button id="locate">Use my location</button>
   <div id="status">Loading tree inventory…</div>
 </header>
@@ -419,12 +456,18 @@
 <script>
 const status = document.getElementById('status');
 const searchInput = document.getElementById('search');
+const dbhMinInput = document.getElementById('dbhMin');
+const dbhMaxInput = document.getElementById('dbhMax');
+const dbhTickMarks = document.getElementById('dbhTickMarks');
+const dbhIncludeNullInput = document.getElementById('dbhIncludeNull');
+const dbhFilterValue = document.getElementById('dbhFilterValue');
 const locateButton = document.getElementById('locate');
 const mapEl = document.getElementById('map');
 const legendEl = document.getElementById('legend');
 let legendMode = 'common';
 let rows = [];
 let headers = [];
+let searchableHeaders = [];
 let latKey = null;
 let lonKey = null;
 let map = null;
@@ -437,6 +480,15 @@ let userLocationCircle = null;
 let renderedMarkers = [];
 let persistentTreePopup = null;
 const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
+let dbhRangeMin = 0;
+let dbhRangeMax = 100;
+let selectedDbhMin = 0;
+let selectedDbhMax = 100;
+let dbhMinIndex = 0;
+let dbhMaxIndex = 10;
+let dbhBreakpoints = [0, 10];
+let dbhFilterSyncInProgress = false;
+let includeNullDbh = true;
 let selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','plum','pear','honeylocust','ash','lilac','crabapple','serviceberry','hornbeam','birch','plane','ginkgo','pine','spruce','hemlock','cedar','fir','other_conifer','dogwood','redbud','cercis','hawthorn','magnolia','holly','ilex','zelkova','goldenrain','katsura','sweetgum','tulip','catalpa','walnut','hickory','buckeye','chestnut','dawn_redwood','baldcypress','paper_mulberry','other','unmapped']);
 const MAX_MARKERS = 1000;
 const MARKER_BATCH_SIZE = 200;
@@ -533,6 +585,33 @@ function findCoords(head) {
   }
 }
 
+function isNumericValue(value) {
+  if (value === null || value === undefined) return false;
+  const text = String(value).trim();
+  if (!text) return false;
+  return Number.isFinite(Number(text));
+}
+
+function deriveSearchableHeaders(allHeaders, dataRows) {
+  if (!allHeaders || !allHeaders.length) return [];
+  const rowsToSample = (dataRows || []).slice(0, 500);
+
+  return allHeaders.filter(header => {
+    const lowerHeader = String(header).toLowerCase();
+    if (header === latKey || header === lonKey) return false;
+    if (['x', 'y', 'lat', 'lon', 'lng', 'latitude', 'longitude', 'loc_x', 'loc_y'].includes(lowerHeader)) return false;
+
+    const nonEmptyValues = rowsToSample
+      .map(row => row && row[header])
+      .filter(value => value !== null && value !== undefined && String(value).trim() !== '');
+
+    if (!nonEmptyValues.length) return true;
+    const numericCount = nonEmptyValues.filter(isNumericValue).length;
+    const numericRatio = numericCount / nonEmptyValues.length;
+    return numericRatio < 0.9;
+  });
+}
+
 function escapeHtml(value) {
   return String(value)
     .replace(/&/g, '&amp;')
@@ -574,6 +653,147 @@ function queueViewportRefresh() {
       }
     }
   }, 80);
+}
+
+function getDbhValue(row) {
+  const dbhValue = parseFloat(row.tree_dbh || row.dbh || row.Tree_DBH || row['tree_dbh'] || '');
+  return Number.isFinite(dbhValue) ? dbhValue : null;
+}
+
+function updateDbhFilterLabel() {
+  if (!dbhFilterValue) return;
+  if (selectedDbhMin <= dbhRangeMin && selectedDbhMax >= dbhRangeMax) {
+    dbhFilterValue.textContent = 'All sizes (in)';
+    return;
+  }
+  dbhFilterValue.textContent = `${selectedDbhMin}-${selectedDbhMax} in`;
+}
+
+function updateDbhRangeTrack() {
+  const rangeWrap = document.querySelector('.dbh-range-wrap');
+  if (!rangeWrap) return;
+  const span = Math.max(1, dbhBreakpoints.length - 1);
+  const startPct = (dbhMinIndex / span) * 100;
+  const endPct = (dbhMaxIndex / span) * 100;
+  rangeWrap.style.setProperty('--range-start', `${Math.max(0, Math.min(100, startPct))}%`);
+  rangeWrap.style.setProperty('--range-end', `${Math.max(0, Math.min(100, endPct))}%`);
+}
+
+function renderDbhTickMarks() {
+  if (!dbhTickMarks) return;
+  dbhTickMarks.innerHTML = '';
+  const count = Math.max(0, dbhBreakpoints.length - 1);
+  if (count === 0) return;
+  for (let i = 0; i <= count; i += 1) {
+    const tick = document.createElement('span');
+    tick.className = 'dbh-tick';
+    tick.style.left = `${(i / count) * 100}%`;
+    if (i === 0) tick.classList.add('first');
+    if (i === count) tick.classList.add('last');
+    dbhTickMarks.appendChild(tick);
+  }
+}
+
+function getQuantile(sortedValues, q) {
+  if (!sortedValues.length) return 0;
+  const index = Math.max(0, Math.min(sortedValues.length - 1, Math.floor((sortedValues.length - 1) * q)));
+  return sortedValues[index];
+}
+
+function initializeDbhFilter(dataRows) {
+  const values = (dataRows || []).map(getDbhValue).filter(value => value !== null);
+  if (!values.length) return;
+
+  let minValue = Number.POSITIVE_INFINITY;
+  let maxValue = Number.NEGATIVE_INFINITY;
+  values.forEach((value) => {
+    if (value < minValue) minValue = value;
+    if (value > maxValue) maxValue = value;
+  });
+
+  dbhRangeMin = 0;
+  dbhRangeMax = Math.max(10, Math.ceil(maxValue / 10) * 10);
+  const sortedValues = [...values].sort((a, b) => a - b);
+  const tailStartCandidate = Math.ceil(getQuantile(sortedValues, 0.95) / 10) * 10;
+  const tailStart = Math.min(dbhRangeMax - 10, Math.max(60, tailStartCandidate));
+
+  dbhBreakpoints = [0];
+  for (let value = 10; value <= tailStart; value += 10) {
+    dbhBreakpoints.push(value);
+  }
+  if (dbhBreakpoints[dbhBreakpoints.length - 1] !== dbhRangeMax) {
+    dbhBreakpoints.push(dbhRangeMax);
+  }
+
+  dbhMinIndex = 0;
+  dbhMaxIndex = dbhBreakpoints.length - 1;
+  selectedDbhMin = dbhRangeMin;
+  selectedDbhMax = dbhRangeMax;
+
+  dbhMinInput.min = '0';
+  dbhMinInput.max = String(dbhBreakpoints.length - 1);
+  dbhMinInput.value = String(dbhMinIndex);
+  dbhMinInput.step = '1';
+  dbhMinInput.disabled = false;
+
+  dbhMaxInput.min = '0';
+  dbhMaxInput.max = String(dbhBreakpoints.length - 1);
+  dbhMaxInput.value = String(dbhMaxIndex);
+  dbhMaxInput.step = '1';
+  dbhMaxInput.disabled = false;
+
+  updateDbhFilterLabel();
+  updateDbhRangeTrack();
+  renderDbhTickMarks();
+}
+
+function applyDbhFilter(rowsToFilter) {
+  return (rowsToFilter || []).filter(row => {
+    const dbhValue = getDbhValue(row);
+    // User-controlled behavior for missing/invalid DBH.
+    if (dbhValue === null) return includeNullDbh;
+    // With 10-step slider values, include non-positive DBH at the lowest positive bucket.
+    if (selectedDbhMin <= 10 && dbhValue <= 0) return true;
+    return dbhValue >= selectedDbhMin && dbhValue <= selectedDbhMax;
+  });
+}
+
+function bindDbhFilter() {
+  if (!dbhMinInput || !dbhMaxInput) return;
+
+  const updateRange = () => {
+    if (dbhFilterSyncInProgress) return;
+    dbhFilterSyncInProgress = true;
+    try {
+      const minRawIndex = Number(dbhMinInput.value);
+      const maxRawIndex = Number(dbhMaxInput.value);
+      dbhMinIndex = Math.min(minRawIndex, maxRawIndex);
+      dbhMaxIndex = Math.max(minRawIndex, maxRawIndex);
+      selectedDbhMin = dbhBreakpoints[dbhMinIndex];
+      selectedDbhMax = dbhBreakpoints[dbhMaxIndex];
+
+      const clampedMin = String(dbhMinIndex);
+      const clampedMax = String(dbhMaxIndex);
+      if (dbhMinInput.value !== clampedMin) dbhMinInput.value = clampedMin;
+      if (dbhMaxInput.value !== clampedMax) dbhMaxInput.value = clampedMax;
+
+      updateDbhFilterLabel();
+      updateDbhRangeTrack();
+      refreshVisibleRows();
+    } finally {
+      dbhFilterSyncInProgress = false;
+    }
+  };
+
+  dbhMinInput.addEventListener('input', updateRange);
+  dbhMaxInput.addEventListener('input', updateRange);
+  if (dbhIncludeNullInput) {
+    includeNullDbh = dbhIncludeNullInput.checked;
+    dbhIncludeNullInput.addEventListener('change', () => {
+      includeNullDbh = dbhIncludeNullInput.checked;
+      refreshVisibleRows();
+    });
+  }
 }
 
 function getCategoryKey(row) {
@@ -673,7 +893,7 @@ function getMarkerColor(row) {
 }
 
 function getMarkerRadius(row) {
-  const dbhValue = parseFloat(row.tree_dbh || row.dbh || row.Tree_DBH || row['tree_dbh'] || '');
+  const dbhValue = getDbhValue(row);
   if (!Number.isFinite(dbhValue)) return 4;
   if (dbhValue < 10) return 3;
   if (dbhValue < 20) return 5;
@@ -913,10 +1133,25 @@ function makePopup(row) {
     }
   }
   
-  // Add other fields (excluding objectid, X, Y, and coordinate fields)
-  const excludeHeaders = new Set(['objectid', 'ObjectId', 'OBJECTID', 'X', 'Y', latKey, lonKey]);
+  // Add other fields (excluding objectid, X, Y, year, and coordinate fields)
+  const excludeHeaders = new Set(['objectid', 'ObjectId', 'OBJECTID', 'X', 'Y', 'year', 'Year', 'YEAR', latKey, lonKey]);
   const popupHeaders = headers.filter(header => !excludeHeaders.has(header));
-  const items = popupHeaders.map(header => `<strong>${escapeHtml(header)}</strong>: ${escapeHtml(row[header] || '')}`);
+  const items = popupHeaders.map(header => {
+    const lowerHeader = String(header).toLowerCase();
+    const rawValue = row[header] || '';
+    let label = header;
+    let displayValue = rawValue;
+
+    if (lowerHeader === 'tree_name') {
+      label = 'Tree Name';
+    } else if (lowerHeader === 'tree_dbh') {
+      label = 'DBH';
+      const parsed = parseFloat(rawValue);
+      displayValue = Number.isFinite(parsed) ? `${parsed} inches` : rawValue;
+    }
+
+    return `<strong>${escapeHtml(label)}</strong>: ${escapeHtml(displayValue)}`;
+  });
   
   content += items.join('<br>');
   return `<div style="max-width:240px">${content}</div>`;
@@ -1025,9 +1260,11 @@ function renderMarkers(dataRows) {
 
 function refreshVisibleRows() {
   const query = searchInput.value.trim().toLowerCase();
-  let filtered = rows;
+  let filtered = applyDbhFilter(rows);
   if (query) {
-    filtered = rows.filter(row => headers.some(h => (row[h] || '').toString().toLowerCase().includes(query)));
+    const fields = searchableHeaders.length ? searchableHeaders : headers;
+    filtered = rows.filter(row => fields.some(h => (row[h] || '').toString().toLowerCase().includes(query)));
+    filtered = applyDbhFilter(filtered);
   }
   renderMarkers(filtered);
   if (query) {
@@ -1110,6 +1347,7 @@ attachLegendScrollProtection();
 bindLegendModeToggle();
 bindLegendCollapseToggle();
 updateLegendLabels();
+bindDbhFilter();
 
 function tryGeolocate() {
   if (!map || !navigator.geolocation) {
@@ -1218,6 +1456,8 @@ function init() {
       headers = result.meta.fields || Object.keys(result.data[0]);
       findCoords(headers);
       rows = result.data;
+      searchableHeaders = deriveSearchableHeaders(headers, rows);
+      initializeDbhFilter(rows);
       renderMarkers(rows);
       status.textContent = `Loaded ${rows.length} tree records.`;
     })
