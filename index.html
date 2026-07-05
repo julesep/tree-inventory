@@ -49,8 +49,10 @@
   .legend-select-all label { display:flex; align-items:center; gap:6px; font-size:0.82rem; font-weight:600; color:#334155; cursor:pointer; }
   .legend-swatch { width:12px; height:12px; border-radius:50%; display:inline-block; border:1px solid rgba(15, 23, 42, 0.2); transition:opacity 0.15s, filter 0.15s; }
   .legend-note { margin-top:8px; padding-top:8px; border-top:1px solid #e5e7eb; display:flex; align-items:center; gap:6px; font-size:0.85rem; color:#64748b; }
-  .leaflet-container { font: inherit; }
+  .leaflet-container { font: inherit; touch-action: manipulation; }
   .leaflet-popup-content { font-size:0.95rem; }
+  .tree-hit-target { background:transparent; border:none; }
+  .tree-hit-target div { background:transparent; width:100%; height:100%; }
   .muted { color:#64748b; }
 </style>
 </head>
@@ -432,6 +434,7 @@ let activeRows = [];
 let viewportRefreshTimer = null;
 let userLocationMarker = null;
 let userLocationCircle = null;
+let renderedMarkers = [];
 const isCoarsePointer = window.matchMedia('(pointer: coarse)').matches;
 let selectedCategoryKeys = new Set(['maple','linden','oak','elm','cherry','plum','pear','honeylocust','ash','lilac','crabapple','serviceberry','hornbeam','birch','plane','ginkgo','pine','spruce','hemlock','cedar','fir','other_conifer','dogwood','redbud','cercis','hawthorn','magnolia','holly','ilex','zelkova','goldenrain','katsura','sweetgum','tulip','catalpa','walnut','hickory','buckeye','chestnut','dawn_redwood','baldcypress','paper_mulberry','other','unmapped']);
 const MAX_MARKERS = 1000;
@@ -494,8 +497,9 @@ function initMap() {
     return;
   }
   map = L.map('map', { zoomControl:true, preferCanvas:true });
-  // Add extra tap tolerance on coarse pointers so small dots are easier to hit on mobile.
-  markerRenderer = L.canvas({ tolerance: isCoarsePointer ? 18 : 2 });
+  // On some Android in-app browsers, canvas hit-testing is unreliable for tap events.
+  // Use default SVG markers on coarse pointers and keep canvas on fine pointers.
+  markerRenderer = isCoarsePointer ? null : L.canvas({ tolerance: 2 });
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap contributors © CARTO',
     subdomains: 'abcd',
@@ -648,21 +652,16 @@ function getMarkerColor(row) {
 
 function getMarkerRadius(row) {
   const dbhValue = parseFloat(row.tree_dbh || row.dbh || row.Tree_DBH || row['tree_dbh'] || '');
-  let baseRadius;
-  if (!Number.isFinite(dbhValue)) {
-    baseRadius = 4;
-  } else if (dbhValue < 10) {
-    baseRadius = 3;
-  } else if (dbhValue < 20) {
-    baseRadius = 5;
-  } else if (dbhValue < 30) {
-    baseRadius = 7;
-  } else {
-    baseRadius = 9;
-  }
+  if (!Number.isFinite(dbhValue)) return 4;
+  if (dbhValue < 10) return 3;
+  if (dbhValue < 20) return 5;
+  if (dbhValue < 30) return 7;
+  return 9;
+}
 
-  if (!isCoarsePointer) return baseRadius;
-  return Math.max(8, baseRadius + 2);
+function getMarkerHitRadius(row) {
+  const visibleRadius = getMarkerRadius(row);
+  return isCoarsePointer ? Math.max(24, visibleRadius * 4) : Math.max(18, visibleRadius * 3);
 }
 
 function selectRowsToRender(rows, limit) {
@@ -912,6 +911,7 @@ function renderMarkers(dataRows) {
   const hadLocationCircle = userLocationCircle;
   const hadLocationMarker = userLocationMarker;
   markersLayer.clearLayers();
+  renderedMarkers = [];
   if (hadLocationCircle && map && map.getZoom() > 12) {
     userLocationCircle = hadLocationCircle.addTo(markersLayer);
   } else {
@@ -952,22 +952,42 @@ function renderMarkers(dataRows) {
       const row = rowsToRender[index];
       const markerStyle = getMarkerColor(row);
       const markerRadius = getMarkerRadius(row);
-      const marker = L.circleMarker([parseFloat(row[latKey]), parseFloat(row[lonKey])], {
+      const latLng = [parseFloat(row[latKey]), parseFloat(row[lonKey])];
+      const visibleMarker = L.circleMarker(latLng, {
         radius: markerRadius,
         color: markerStyle.color,
         fillColor: markerStyle.fillColor,
         fillOpacity: 0.85,
+        interactive: false,
         renderer: markerRenderer || undefined
       });
-      marker.bindPopup(makePopup(row));
-      marker.on('click', () => marker.openPopup());
-      marker.on('touchstart', (event) => {
+      visibleMarker.addTo(markersLayer);
+
+      const hitRadius = getMarkerHitRadius(row);
+      const hitMarker = L.marker(latLng, {
+        interactive: true,
+        bubblingMouseEvents: false,
+        icon: L.divIcon({
+          className: 'tree-hit-target',
+          html: '<div></div>',
+          iconSize: [hitRadius, hitRadius],
+          iconAnchor: [Math.round(hitRadius / 2), Math.round(hitRadius / 2)]
+        })
+      });
+      hitMarker.bindPopup(makePopup(row), {
+        closeButton: true,
+        autoPan: false,
+        keepInView: false
+      });
+      hitMarker.on('click', () => hitMarker.openPopup());
+      hitMarker.on('touchstart', (event) => {
         if (event && event.originalEvent && typeof event.originalEvent.preventDefault === 'function') {
           event.originalEvent.preventDefault();
         }
-        marker.openPopup();
+        hitMarker.openPopup();
       });
-      marker.addTo(markersLayer);
+      hitMarker.addTo(markersLayer);
+      renderedMarkers.push(hitMarker);
     }
 
     if (index < rowsToRender.length) {
