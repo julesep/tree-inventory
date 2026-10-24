@@ -583,7 +583,7 @@ function initMap() {
   // On some Android in-app browsers, canvas hit-testing is unreliable for tap events.
   // Use default SVG markers on coarse pointers and keep canvas on fine pointers.
   markerRenderer = isCoarsePointer ? null : L.canvas({ tolerance: 2 });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png?key=cb1_4ttp_1_21d0c620bfa8fdd7d775d64b', {
     attribution: '© OpenStreetMap contributors © CARTO',
     subdomains: 'abcd',
     maxZoom: 20
